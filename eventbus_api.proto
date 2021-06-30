@@ -1,0 +1,307 @@
+/*
+ * Salesforce Event Bus API Version 1.
+ *
+ * See https://sfdc.co/event-bus-api for details.
+ * @author judy.lin
+ */
+
+syntax = "proto3";
+package eventbus.v1;
+
+option java_package = "com.salesforce.eventbus.protobuf";
+option java_outer_classname = "EventBusAPIProtos";
+
+/*
+ * Uniquely identifies and describes an Event Bus topic
+ */
+message TopicInfo {
+    // Event Bus Topic name
+    string topic_name = 1;
+    // GDoT Tenant GUID
+    string tenant_guid = 2;
+    // Is publishing allowed?
+    bool can_publish = 3;
+    // Is subscription allowed?
+    bool can_subscribe = 4;
+    /* Id of the current schema of the topic, which can be used for
+     * publishing of generically serialized events.
+     */
+    string schema_id = 5;
+}
+
+/*
+ * A request message for GetTopic. Note that tenant is not directly referenced
+ * in the request, but is implicitly identified by the authentication headers
+ */
+message TopicRequest {
+    // The name of the Event Bus topic to retrieve.
+    string topic_name = 1;
+}
+
+/*
+ * Header carry information for distributed tracing, filtering, routing etc.
+ * For example, X-B3-* headers assigned by a publisher are stored with event and
+ * can provide a full distributed trace of event across its entire lifecycle.
+ */
+message EventHeader {
+    string key = 1;
+    bytes value = 2;
+}
+
+/*
+ * The value of Event Bus event that is created by an event producing application.
+ */
+message ProducerEvent {
+    // The event's guid.
+    string id = 1;
+    // Schema fingerprint for this event which is hash of the schema
+    string schema_id = 2;
+    // The message data field.
+    bytes payload = 3;
+    // key value pairs of headers
+    repeated EventHeader headers = 4;
+}
+
+/*
+ * Event value with additional attribute assigned on consumption.
+ */
+message ConsumerEvent {
+    // Event Bus event
+    ProducerEvent event = 1;
+    /* The replay of event. If stored by the consuming application, this allows
+     * for subscription durability by resumption at arbitrary points of the
+     * subscription stream on application restart.
+     */
+    bytes replay_id = 2;
+}
+
+/*
+ * Publish Result for an event. This will either have replay_id or publish error.
+ */
+message PublishResult {
+    // Replay id for event
+    bytes replay_id = 1;
+    // Publish Error if any
+    Error error = 2;
+}
+
+message Error {
+    // Error code
+    ErrorCode code = 1;
+    // Error message
+    string msg = 2;
+}
+
+// Error Codes supported by EBC
+enum ErrorCode {
+    UNKNOWN = 0;
+    PUBLISH = 1;
+}
+
+/*
+ * Supported Subscription Replay start values.
+ * By default, the subscription will start at the tip of the stream if not specified.
+ */
+enum ReplayPreset {
+    // Start subscription at tip of stream.
+    LATEST = 0;
+    // Start subscription at earliest point of stream
+    EARLIEST = 1;
+    // Start at a custom point in stream. This must be set with a valid replay_id in the FetchRequest
+    CUSTOM = 2;
+}
+
+/*
+ * Request for the Subscribe streaming RPC method. This request is used to
+ * 1. Establish the initial subscribe stream
+ * 2. Request more events from the subscription stream.
+ * Flow Control is handled by subscriber via num_requested.
+ * A client can specify starting point of subscription with replay_preset and replay_id combinations.
+ * If no replay_preset is specified, the subscription starts at LATEST (tip of stream).
+ * replay_preset and replay_id values will only be consumed as part of the first FetchRequest. If
+ * a client needs to start at another point in the stream, it will need to start a new subscription.
+ */
+message FetchRequest {
+    /*
+     * Identifies a topic for subscription in the very first FetchRequest of the stream. Topic cannot change
+     * in subsequent FetchRequests within the same subscribe stream, but can be omitted for efficiency.
+     */
+    string topic_name = 1;
+
+    /*
+     * Subscription starting point. This will only be consumed as part of the first FetchRequest
+     * to setup the subscription.
+     */
+    ReplayPreset replay_preset = 2;
+    /*
+     * If replay_preset of CUSTOM is selected, specify the position of subscription to start on.
+     * This will only be consumed as part of the first FetchRequest to setup the subscription.
+     */
+    bytes replay_id = 3;
+    /*
+     * Number of events a client is ready to accept. Each subsequent FetchRequest informs the server
+     * of additional processing capacity available on the client side. There is no guarantee of equal number of
+     * FetchResponse messages to be sent back. There is not necessarily a correspondence between
+     * number of requested events in FetchRequest and the number of events returned in subsequent
+     * FetchResponses.
+     */
+    int32 num_requested = 4;
+    /*
+     * To amortize per-batch processing cost across larger number of events, set the
+     * batching delay. If not set, batches are delivered as soon as any number of events
+     * becomes available.
+     * This will only be consumed as part of the first FetchRequest to setup the subscription.
+     */
+    int32 linger_ms = 5;
+    // Authentication refresh token if applicable
+    string auth_refresh = 6;
+}
+
+/*
+ * Response for the Subscribe streaming RPC method. This returns
+ * ConsumerEvent(s).
+ */
+message FetchResponse {
+    // Received events for subscription for client consumption
+    repeated ConsumerEvent events = 1;
+}
+
+/*
+ * Request for the GetSchema RPC method. This requests for the Schema of Event
+ * based on SchemaId.
+ */
+message SchemaRequest {
+    // Schema fingerprint for this event which is hash of the schema
+    string schema_id = 1;
+}
+
+/*
+ * Response for the GetSchema RPC method. This returns the Schema Id
+ * and Schema of Event.
+ */
+message SchemaInfo {
+    // Avro schema in JSON format
+    string schema_json = 1;
+    // Schema fingerprint
+    string schema_id = 2;
+}
+
+// Request for the Publish and PublishStream RPC method.
+message PublishRequest {
+    // Topic to publish on
+    string topic_name = 1;
+    // Batch of ProducerEvent(s) to send
+    repeated ProducerEvent events = 2;
+    // Authentication refresh token if applicable
+    string auth_refresh = 3;
+}
+
+/*
+ * Response for the Publish and PublishStream RPC method. This returns
+ * a list of PublishResults for each event that the client wanted to
+ * publish. The PublishResult will indicate if publish succeeded or not
+ * for each event. It also returns the schemaId which was used to create
+ * the ProducerEvents in the PublishRequest.
+ */
+message PublishResponse {
+    // Publish results
+    repeated PublishResult results = 1;
+    // Schema fingerprint for this event which is hash of the schema
+    string schema_id = 2;
+}
+
+/*
+ * EventBusAPIService provides the ability to interact with Salesforce Event Bus.
+ *
+ * There are two ways of authenticating with Salesforce Event Bus. Clients can 1)
+ * provide C2C JWTs with tenant information or 2) they can provide a SFDC session token with tenant information
+ *
+ * In either case, for each RPC, a client needs to pass authentication information
+ * as metadata headers (https://www.grpc.io/docs/guides/concepts/#metadata) with their method call.
+ *
+ * For C2C JWT authentication, use:
+ *   x-sfdc-c2c-jwt : the C2C JWT value
+ *   x-sfdc-instance : tenant's home instance name as stored in GDoT
+ *   x-sfdc-api-endpoint : (optional) metadata retrieval API endpoint as stored in GDoT. Derived from the instance name by default.
+ *
+ * For SFDC session token authentication,  use:
+ *   x-sfdc-api-session-token : SFDC session token
+ *   x-sfdc-instance-url : Salesforce instance URL
+ *   x-sfdc-tenant-id : tenant id of the client
+ *
+ * StatusException is thrown in case of response failure for every kind of request.
+ */
+service EventBusAPIService {
+    /*
+     * Bidirectional streaming RPC to subscribe to a Event Bus Topic. The subscription is pull-based. A client can request
+     * for more events as it consumes events. This enables a client to handle flow control.
+     *
+     * Typical flow:
+     * 1. Client requests for X number of events via FetchRequest.
+     * 2. Server receives request and delivers events until X events are delivered to client via FetchResponse.
+     * 3. Client consumes the FetchResponses as they come.
+     * 4. Client issues new FetchRequest for Y more number of events. This request can
+     *    come before the server has delivered the earlier requested X number of events
+     *    so the client gets a continuous stream of events if any.
+     *
+     * If a client requests for more events before the server finishes the last
+     * requested amount, the server will append the new amount to the current amount of
+     * event it still needs to fetch and deliver.
+     *
+     * A client can subscribe at any point the subscription stream by providing the corresponding replay_id in the
+     * FetchRequest. The replay_id will only be honored for the first FetchRequest received from a client. Any
+     * subsequent FetchRequests with a new replay_id will be ignored. A client will need to call the Subscribe RPC
+     * again to restart at a new point in the stream.
+     *
+     * The first FetchRequest of the stream identifies the topic to subscribe to.
+     * If any subsequent FetchRequest provides topic_name, it must match what
+     * was provided in the first FetchRequest otherwise the RPC will error
+     * with INVALID_ARGUMENT status.
+     *
+     * When using C2C JWTs as authentication, FetchRequests need to be sent to the server
+     * periodically with fresh C2C JWTs as the JWTs expire every 90 secs.
+     */
+    rpc Subscribe (stream FetchRequest) returns (stream FetchResponse);
+
+    // Get Event Schema for an Event Bus topic based on Schema Id.
+    rpc GetSchema (SchemaRequest) returns (SchemaInfo);
+
+    /*
+     * Get the Topic Information related to an Event Bus topic.
+     */
+    rpc GetTopic (TopicRequest) returns (TopicInfo);
+
+    /*
+     * Send publish request to synchronously publish events to an Event Bus topic.
+     */
+    rpc Publish (PublishRequest) returns (PublishResponse);
+
+    /*
+     * Bidirectional Streaming RPC to publish events to Event Bus.
+     * PublishRequest contains the batch of events to publish.
+     *
+     * The first PublishRequest of the stream identifies the topic to publish on.
+     * If any subsequent PublishRequest provides topic_name, it must match what
+     * was provided in the first PublishRequest otherwise the RPC will error
+     * with INVALID_ARGUMENT status.
+     *
+     * The server will return a PublishResponse for each PublishRequest when publish is
+     * complete for the batch. A client does not have to wait for a PublishResponse
+     * before sending a new PublishRequest, i.e. multiple publish batches can be queued
+     * up, which allows for higher publish rate as a client can asynchronously
+     * publish more events while publishes are still in flight on the server side.
+     *
+     * PublishResponse holds a PublishResult for each event published that indicates success
+     * or failure of the publish. A client can then retry the publish as needed before sending
+     * more PublishRequests for new events to publish.
+     *
+     * A client would have to send a valid publish request (events > 0) every 70 secs to hold on to
+     * the stream, otherwise, server will clean up the stream.
+     *
+     * When using C2C JWTs as authentication, PublishRequests need to be sent to the server
+     * periodically with fresh C2C JWTs as the JWTs expire every 90 secs.
+     */
+    rpc PublishStream (stream PublishRequest) returns (stream PublishResponse);
+}
+
+// Style guide: https://developers.google.com/protocol-buffers/docs/style
