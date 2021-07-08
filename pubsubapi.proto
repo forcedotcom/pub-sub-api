@@ -1,23 +1,21 @@
 /*
- * Salesforce Event Bus API Version 1.
- *
- * See https://sfdc.co/event-bus-api for details.
- * @author judy.lin
+ * Salesforce Pub/Sub API Version 1
+ * This is the proto file for the Pub/Sub API pilot (Winter '22)
  */
 
 syntax = "proto3";
 package eventbus.v1;
 
 option java_package = "com.salesforce.eventbus.protobuf";
-option java_outer_classname = "EventBusAPIProtos";
+option java_outer_classname = "PubSubAPIProtos";
 
 /*
- * Uniquely identifies and describes an Event Bus topic
+ * Uniquely identifies and describes a topic
  */
 message TopicInfo {
-    // Event Bus Topic name
+    // Topic name
     string topic_name = 1;
-    // GDoT Tenant GUID
+    // Tenant GUID
     string tenant_guid = 2;
     // Is publishing allowed?
     bool can_publish = 3;
@@ -34,7 +32,7 @@ message TopicInfo {
  * in the request, but is implicitly identified by the authentication headers
  */
 message TopicRequest {
-    // The name of the Event Bus topic to retrieve.
+    // The name of the topic to retrieve.
     string topic_name = 1;
 }
 
@@ -49,7 +47,7 @@ message EventHeader {
 }
 
 /*
- * The value of Event Bus event that is created by an event producing application.
+ * The value of a platform event that is created by an event producing application.
  */
 message ProducerEvent {
     // The event's guid.
@@ -66,7 +64,7 @@ message ProducerEvent {
  * Event value with additional attribute assigned on consumption.
  */
 message ConsumerEvent {
-    // Event Bus event
+    // Platform event
     ProducerEvent event = 1;
     /* The replay of event. If stored by the consuming application, this allows
      * for subscription durability by resumption at arbitrary points of the
@@ -139,11 +137,10 @@ message FetchRequest {
      */
     bytes replay_id = 3;
     /*
-     * Number of events a client is ready to accept. Each subsequent FetchRequest informs the server
-     * of additional processing capacity available on the client side. There is no guarantee of equal number of
-     * FetchResponse messages to be sent back. There is not necessarily a correspondence between
-     * number of requested events in FetchRequest and the number of events returned in subsequent
-     * FetchResponses.
+     * Maximum number of events a client is ready to accept. Each subsequent FetchRequest 
+		 * informs the server of additional processing capacity available on the client side. 
+		 * For a single FetchRequest, the API will return <= num_requested events, though
+		 * they may arrive in multiple FetchResponse messages.
      */
     int32 num_requested = 4;
     /*
@@ -211,18 +208,14 @@ message PublishResponse {
 }
 
 /*
- * EventBusAPIService provides the ability to interact with Salesforce Event Bus.
+ * PubSubAPIService provides the ability to interact with Salesforce event bus.
  *
- * There are two ways of authenticating with Salesforce Event Bus. Clients can 1)
- * provide C2C JWTs with tenant information or 2) they can provide a SFDC session token with tenant information
+ * A session token is needed to authenticate. Any of the Salesforce supported 
+ * OAuth flows can be used to obtain a session token: 
+ * https://help.salesforce.com/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5
  *
- * In either case, for each RPC, a client needs to pass authentication information
- * as metadata headers (https://www.grpc.io/docs/guides/concepts/#metadata) with their method call.
- *
- * For C2C JWT authentication, use:
- *   x-sfdc-c2c-jwt : the C2C JWT value
- *   x-sfdc-instance : tenant's home instance name as stored in GDoT
- *   x-sfdc-api-endpoint : (optional) metadata retrieval API endpoint as stored in GDoT. Derived from the instance name by default.
+ * For each RPC, a client needs to pass authentication information as metadata 
+ * headers (https://www.grpc.io/docs/guides/concepts/#metadata) with their method call.
  *
  * For SFDC session token authentication,  use:
  *   x-sfdc-api-session-token : SFDC session token
@@ -231,9 +224,9 @@ message PublishResponse {
  *
  * StatusException is thrown in case of response failure for every kind of request.
  */
-service EventBusAPIService {
+service PubSubAPIService {
     /*
-     * Bidirectional streaming RPC to subscribe to a Event Bus Topic. The subscription is pull-based. A client can request
+     * Bidirectional streaming RPC to subscribe to a topic. The subscription is pull-based. A client can request
      * for more events as it consumes events. This enables a client to handle flow control.
      *
      * Typical flow:
@@ -257,27 +250,24 @@ service EventBusAPIService {
      * If any subsequent FetchRequest provides topic_name, it must match what
      * was provided in the first FetchRequest otherwise the RPC will error
      * with INVALID_ARGUMENT status.
-     *
-     * When using C2C JWTs as authentication, FetchRequests need to be sent to the server
-     * periodically with fresh C2C JWTs as the JWTs expire every 90 secs.
      */
     rpc Subscribe (stream FetchRequest) returns (stream FetchResponse);
 
-    // Get Event Schema for an Event Bus topic based on Schema Id.
+    // Get Event Schema for a topic based on Schema Id.
     rpc GetSchema (SchemaRequest) returns (SchemaInfo);
 
     /*
-     * Get the Topic Information related to an Event Bus topic.
+     * Get the Topic Information related to a topic.
      */
     rpc GetTopic (TopicRequest) returns (TopicInfo);
 
     /*
-     * Send publish request to synchronously publish events to an Event Bus topic.
+     * Send publish request to synchronously publish events to an topic.
      */
     rpc Publish (PublishRequest) returns (PublishResponse);
 
     /*
-     * Bidirectional Streaming RPC to publish events to Event Bus.
+     * Bidirectional Streaming RPC to publish events to the Salesforce event bus.
      * PublishRequest contains the batch of events to publish.
      *
      * The first PublishRequest of the stream identifies the topic to publish on.
@@ -297,9 +287,6 @@ service EventBusAPIService {
      *
      * A client would have to send a valid publish request (events > 0) every 70 secs to hold on to
      * the stream, otherwise, server will clean up the stream.
-     *
-     * When using C2C JWTs as authentication, PublishRequests need to be sent to the server
-     * periodically with fresh C2C JWTs as the JWTs expire every 90 secs.
      */
     rpc PublishStream (stream PublishRequest) returns (stream PublishResponse);
 }
