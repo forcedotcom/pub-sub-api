@@ -258,7 +258,7 @@ service PubSub {
    *
    * If a client requests for more events before the server finishes the last
    * requested amount, the server will append the new amount to the current 
-   * amount of event it still needs to fetch and deliver.
+   * amount of events it still needs to fetch and deliver.
    *
    * A client can subscribe at any point the subscription stream by providing 
    * the corresponding replay_id in the FetchRequest. The replay_id will only 
