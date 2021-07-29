@@ -250,7 +250,7 @@ service PubSub {
    * Typical flow:
    * 1. Client requests for X number of events via FetchRequest.
    * 2. Server receives request and delivers events until X events are delivered 
-   *    to client via FetchResponse.
+   *    to client via one or more FetchResponses.
    * 3. Client consumes the FetchResponses as they come.
    * 4. Client issues new FetchRequest for Y more number of events. This request 
    *    can come before the server has delivered the earlier requested X number 
@@ -260,12 +260,12 @@ service PubSub {
    * requested amount, the server will append the new amount to the current 
    * amount of events it still needs to fetch and deliver.
    *
-   * A client can subscribe at any point the subscription stream by providing 
-   * the corresponding replay_id in the FetchRequest. The replay_id will only 
-   * be honored for the first FetchRequest received from a client. Any
-   * subsequent FetchRequests with a new replay_id will be ignored. A client 
-   * will need to call the Subscribe RPC again to restart at a new point in the 
-   * stream.
+   * A client can subscribe at any point in the subscription stream by providing 
+   * the corresponding replay_id in the FetchRequest and setting replay_preset 
+   * to CUSTOM. The replay_id will only  be honored for the first FetchRequest 
+   * received from a client. Any subsequent FetchRequests with a new replay_id 
+   * will be ignored. A client  will need to call the Subscribe RPC again to 
+   * restart at a new point in the stream.
    *
    * The first FetchRequest of the stream identifies the topic to subscribe to.
    * If any subsequent FetchRequest provides topic_name, it must match what
