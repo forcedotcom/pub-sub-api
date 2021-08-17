@@ -1,5 +1,7 @@
 /*
- * Salesforce Pub/Sub API Version 1
+ * Salesforce Pub/Sub API Version 1.
+ *
+ * See https://sfdc.co/event-bus-api for details.
  */
 
 syntax = "proto3";
@@ -29,7 +31,7 @@ message TopicInfo {
 
 /*
  * A request message for GetTopic. Note that tenant is not directly referenced
- * in the request, but is implicitly identified by the authentication headers
+ * in the request, but is implicitly identified by the authentication headers.
  */
 message TopicRequest {
   // The name of the topic to retrieve.
@@ -37,9 +39,10 @@ message TopicRequest {
 }
 
 /*
- * Header carry information for distributed tracing, filtering, routing etc. For 
- * example, X-B3-* headers assigned by a publisher are stored with the event and 
- * can provide a full distributed trace of event across its entire lifecycle.
+ * Header carry information for distributed tracing, filtering, routing etc.
+ * For example, X-B3-* headers assigned by a publisher are stored with the event 
+ * and can provide a full distributed trace of event across its entire 
+ * lifecycle.
  */
 message EventHeader {
   string key = 1;
@@ -50,13 +53,13 @@ message EventHeader {
  * Event value that is created by an event producing application.
  */
 message ProducerEvent {
-  // The event's guid.
+  // The event's guid
   string id = 1;
   // Schema fingerprint for this event which is hash of the schema
   string schema_id = 2;
-  // The message data field.
+  // The message data field
   bytes payload = 3;
-  // key value pairs of headers
+  // Key-value pairs of headers
   repeated EventHeader headers = 4;
 }
 
@@ -66,20 +69,20 @@ message ProducerEvent {
 message ConsumerEvent {
   ProducerEvent event = 1;
   /* The replay of the event. If stored by the consuming application, this 
-   * allows for subscription durability by resumption at arbitrary points of the
-   * subscription stream on application restart.
+   * allows for subscription durability by resuming after arbitrary points of 
+   * the subscription stream on application restart.
    */
   bytes replay_id = 2;
 }
 
 /*
- * Publish Result for an event. This will either have replay_id or publish 
+ * Publish result for an event. This will either have replay_id or publish 
  * error.
  */
 message PublishResult {
   // Replay id for event
   bytes replay_id = 1;
-  // Publish Error if any
+  // Publish error if any
   Error error = 2;
 }
 
@@ -90,7 +93,7 @@ message Error {
   string msg = 2;
 }
 
-// Error Codes supported
+// Error codes supported
 enum ErrorCode {
   UNKNOWN = 0;
   PUBLISH = 1;
@@ -104,16 +107,16 @@ enum ErrorCode {
 enum ReplayPreset {
   // Start subscription at tip of stream.
   LATEST = 0;
-  // Start subscription at earliest point of stream
+  // Start subscription at earliest point of stream.
   EARLIEST = 1;
-  // Start at a custom point in stream. This must be set with a valid replay_id 
-  // in the FetchRequest
+  // Start after a custom point in stream. This must be set with a valid 
+  // replay_id in the FetchRequest.
   CUSTOM = 2;
 }
 
 /*
- * Request for the Subscribe streaming RPC method. This request is used to
- * 1. Establish the initial subscribe stream
+ * Request for the Subscribe streaming RPC method. This request is used to:
+ * 1. Establish the initial subscribe stream.
  * 2. Request more events from the subscription stream.
  * Flow Control is handled by subscriber via num_requested.
  * A client can specify starting point of subscription with replay_preset and 
@@ -133,13 +136,13 @@ message FetchRequest {
 
   /*
    * Subscription starting point. This will only be consumed as part of the 
-   * first FetchRequest to setup the subscription.
+   * first FetchRequest to set up the subscription.
    */
   ReplayPreset replay_preset = 2;
   /*
    * If replay_preset of CUSTOM is selected, specify the position of 
-   * subscription to start on. This will only be consumed as part of the first 
-   * FetchRequest to setup the subscription.
+   * subscription to start after. This will only be consumed as part of the 
+   * first FetchRequest to set up the subscription.
    */
   bytes replay_id = 3;
   /*
@@ -150,26 +153,22 @@ message FetchRequest {
    * messages.
    */
   int32 num_requested = 4;
-  /*
-   * To amortize per-batch processing cost across larger number of events, set 
-   * the batching delay. If not set, batches are delivered as soon as any 
-   * number of events becomes available. This will only be consumed as part of 
-   * the first FetchRequest to setup the subscription.
-   */
-  int32 linger_ms = 5;
   // Authentication refresh token if applicable
-  string auth_refresh = 6;
+  string auth_refresh = 5;
 }
 
 /*
  * Response for the Subscribe streaming RPC method. This returns
- * ConsumerEvent(s). If there are no events, server will send an empty batch 
- * fetch response with the latest replay id within 90 secs.
+ * ConsumerEvent(s).
+ * If there are no events to deliver, the server sends an empty batch fetch 
+ * response with the latest replay id. The empty fetch response is sent within 
+ * 270 seconds. An empty fetch response provides a periodic keepalive from the
+ * server and the latest replay id.
  */
 message FetchResponse {
   // Received events for subscription for client consumption
   repeated ConsumerEvent events = 1;
-  // Latest Replay id of a subscription. Enables clients with an updated replay 
+  // Latest replay id of a subscription. Enables clients with an updated replay 
   // value so that they can keep track of their last consumed replay. Clients 
   // will not have to start a subscription at a very old replay in the case 
   // where a resubscribe is necessary.
@@ -177,8 +176,8 @@ message FetchResponse {
 }
 
 /*
- * Request for the GetSchema RPC method. This requests for the Schema of Event
- * based on SchemaId.
+ * Request for the GetSchema RPC method. This requests for the Schema of an 
+ * event based on SchemaId.
  */
 message SchemaRequest {
   // Schema fingerprint for this event which is hash of the schema
@@ -187,7 +186,7 @@ message SchemaRequest {
 
 /*
  * Response for the GetSchema RPC method. This returns the Schema Id
- * and Schema of Event.
+ * and Schema of an event.
  */
 message SchemaInfo {
   // Avro schema in JSON format
@@ -207,16 +206,16 @@ message PublishRequest {
 }
 
 /*
- * Response for the Publish and PublishStream RPC method. This returns
+ * Response for the Publish and PublishStream RPC methods. This returns
  * a list of PublishResults for each event that the client wanted to
- * publish. The PublishResult will indicate if publish succeeded or not
+ * publish. The PublishResult indicates if publish succeeded or not
  * for each event. It also returns the schemaId which was used to create
  * the ProducerEvents in the PublishRequest.
  */
 message PublishResponse {
   // Publish results
   repeated PublishResult results = 1;
-  // Schema fingerprint for this event which is hash of the schema
+  // Schema fingerprint for this event which is a hash of the schema
   string schema_id = 2;
 }
 
@@ -229,9 +228,9 @@ message PublishResponse {
  * OAuth flows can be used to obtain a session token: 
  * https://help.salesforce.com/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5
  *
- * For each RPC, a client needs to pass authentication information as metadata 
- * headers (https://www.grpc.io/docs/guides/concepts/#metadata) with their 
- * method call.
+ * In either case, for each RPC, a client needs to pass authentication 
+ * information as metadata headers (https://www.grpc.io/docs/guides/concepts/#metadata) 
+ * with each method call.
  *
  * For SFDC session token authentication, use:
  *   x-sfdc-api-session-token : SFDC session token
@@ -250,8 +249,8 @@ service PubSub {
    * Typical flow:
    * 1. Client requests for X number of events via FetchRequest.
    * 2. Server receives request and delivers events until X events are delivered 
-   *    to client via one or more FetchResponses.
-   * 3. Client consumes the FetchResponses as they come.
+   *    to client via one ore more FetchResponse messages.
+   * 3. Client consumes the FetchResponse messages as they come.
    * 4. Client issues new FetchRequest for Y more number of events. This request 
    *    can come before the server has delivered the earlier requested X number 
    *    of events so the client gets a continuous stream of events if any.
@@ -260,16 +259,15 @@ service PubSub {
    * requested amount, the server will append the new amount to the current 
    * amount of events it still needs to fetch and deliver.
    *
-   * A client can subscribe at any point in the subscription stream by providing 
-   * the corresponding replay_id in the FetchRequest and setting replay_preset 
-   * to CUSTOM. The replay_id will only  be honored for the first FetchRequest 
-   * received from a client. Any subsequent FetchRequests with a new replay_id 
-   * will be ignored. A client  will need to call the Subscribe RPC again to 
-   * restart at a new point in the stream.
+   * A client can subscribe at any position in the stream by providing a replay 
+   * option in the first FetchRequest. The replay option is honored for the 
+   * first FetchRequest received from a client. Any subsequent FetchRequests 
+   * with a new replay option are ignored. A client needs to call the Subscribe 
+   * RPC again to restart the subscription at a new position in the stream.
    *
    * The first FetchRequest of the stream identifies the topic to subscribe to.
    * If any subsequent FetchRequest provides topic_name, it must match what
-   * was provided in the first FetchRequest otherwise the RPC will error
+   * was provided in the first FetchRequest; otherwise the RPC will error
    * with INVALID_ARGUMENT status.
    */
   rpc Subscribe (stream FetchRequest) returns (stream FetchResponse);
@@ -288,12 +286,12 @@ service PubSub {
   rpc Publish (PublishRequest) returns (PublishResponse);
 
   /*
-   * Bidirectional Streaming RPC to publish events to Event Bus.
+   * Bidirectional Streaming RPC to publish events to the Event Bus.
    * PublishRequest contains the batch of events to publish.
    *
    * The first PublishRequest of the stream identifies the topic to publish on.
    * If any subsequent PublishRequest provides topic_name, it must match what
-   * was provided in the first PublishRequest otherwise the RPC will error
+   * was provided in the first PublishRequest; otherwise, the RPC will error
    * with INVALID_ARGUMENT status.
    *
    * The server will return a PublishResponse for each PublishRequest when 
@@ -312,6 +310,7 @@ service PubSub {
    * seconds to hold on to the stream. Otherwise, the server closes the stream 
    * and notifies the client. Once the client is notified of the stream closure,
    * it must make a new PublishStream call to resume publishing.
+   *
    */
   rpc PublishStream (stream PublishRequest) returns (stream PublishResponse);
 }
