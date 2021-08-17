@@ -1,7 +1,5 @@
 /*
  * Salesforce Pub/Sub API Version 1.
- *
- * See https://sfdc.co/event-bus-api for details.
  */
 
 syntax = "proto3";
