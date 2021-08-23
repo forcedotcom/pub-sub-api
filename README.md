@@ -9,7 +9,7 @@ directory); please read the README carefully.
 gRPC [officially supports 11 languages](https://grpc.io/docs/languages/), but
 there is unofficial community support in more. To encode and decode events, an
 Avro library for your language of choice will be needed. See below for which
-gRPC-support languages have well-supported Avro libraries:
+officially supported languages have well-supported Avro libraries:
 
 |Supported gRPC Language|Avro Libraries|
 |-----------------------|--------------|
