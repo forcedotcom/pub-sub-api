@@ -24,11 +24,6 @@ from utils.ClientUtil import command_line_input
 my_url = 'https://ebapi.my.stmpb.stm.salesforce.com'
 latest_replay_id = None
 
-"""
-python3 SalesforceListener.py --username client@eb.api --password XXXXXX --url https://ebapi.my.stmpb.stm.salesforce.com  --tenantId core/ebapi/00DR0000000IYeEMAW 
---https true --grpcHost eventbusapi-core4.sfdc-ckzqgc.svc.sfdcfc.net --grpcPort 7443
-"""
-
 
 def process_confirmation(event, pubsub):
     """

@@ -24,11 +24,6 @@ import time
 my_publish_topic = '/event/NewOrderConfirmation__e'
 latest_replay_id = None
 
-"""
-python3 InventoryApp.py --username client@eb.api --password XXXXXXX --url https://ebapi.my.stmpb.stm.salesforce.com  --tenantId core/ebapi/00DR0000000IYeEMAW 
---https true --grpcHost eventbusapi-core4.sfdc-ckzqgc.svc.sfdcfc.net --grpcPort 7443
-"""
-
 
 def make_publish_request(schema_id, record_id, obj):
     """
