@@ -226,8 +226,8 @@ message PublishResponse {
  * OAuth flows can be used to obtain a session token: 
  * https://help.salesforce.com/articleView?id=sf.remoteaccess_oauth_flows.htm&type=5
  *
- * In either case, for each RPC, a client needs to pass authentication 
- * information as metadata headers (https://www.grpc.io/docs/guides/concepts/#metadata) 
+ * For each RPC, a client needs to pass authentication information as metadata 
+ * headers (https://www.grpc.io/docs/guides/concepts/#metadata) 
  * with each method call.
  *
  * For SFDC session token authentication, use:
