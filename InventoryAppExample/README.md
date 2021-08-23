@@ -27,4 +27,10 @@ the estimated delivery date to their customer right away—the integration acts
 so quickly that the salesperson can see the estimated delivery date almost
 instantaneously after they close the opportunity. 
 
+A video demonstrating this app in action can be found on the
+[TrailheaDX](https://www.salesforce.com/trailheadx) website. After
+registering/logging in, go to [Product & Partner
+Demos](https://www.salesforce.com/trailheadx) and click `Integrations &
+Analytics` > `Platform APIs` to watch it.
+
 The proto file for the API can be found [here](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto).
