@@ -5,7 +5,7 @@ parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 
 from utils.ClientUtil import *
-from ChangeEventHeader import process_bitmap
+from ChangeEventHeaderUtility import process_bitmap
 from PubSub import PubSub
 
 
@@ -18,6 +18,7 @@ def process_events(event, pubsub):
         decoded_event = pubsub.decode(json_schema, payload_bytes)
         print("Got events!", decoded_event)
         if 'ChangeEventHeader' in decoded_event:
+            # An example to process bitmap in 'changedFields'
             changed_fields = decoded_event['ChangeEventHeader']['changedFields']
             print("=========== Changed Fields =============")
             print(process_bitmap(avro.schema.parse(json_schema), changed_fields))
