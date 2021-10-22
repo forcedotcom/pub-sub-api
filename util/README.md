@@ -1,5 +1,7 @@
-# Pub/Sub API Example - Change Data Capture Bitmap Expansion
+# Pub/Sub API Examples - Utility Code
 
+
+## ChangeEventHeaderUtility.py
 Because the Pub/Sub API is a binary API, delivered events are formatted as raw
 Avro binary and sometimes contain fields that are not plaintext-readable. This
 manifests in Change Data Capture events, causing them to look different from
