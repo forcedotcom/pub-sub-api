@@ -6,12 +6,13 @@ events published by the inventory app (`InventoryApp.py`). The `if __debug__`
 conditionals are to slow down the speed of the app for demoing purposes.
 """
 
-import os, sys
+import os, sys, avro
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 
+from util.ChangeEventHeaderUtility import process_bitmap
 from datetime import datetime
 import json
 import logging
@@ -37,9 +38,15 @@ def process_confirmation(event, pubsub):
     """
     if event.events:
         payload_bytes = event.events[0].event.payload
-        decoded = pubsub.decode(pubsub.get_schema_json(event.events[0].event.schema_id),
-                                payload_bytes)
-        # print(decoded)
+        json_schema = pubsub.get_schema_json(event.events[0].event.schema_id)
+        decoded_event = pubsub.decode(json_schema, payload_bytes)
+        # print(decoded_event)
+        if 'ChangeEventHeader' in decoded_event:
+            # An example to process bitmap in 'changedFields'
+            changed_fields = decoded_event['ChangeEventHeader']['changedFields']
+            print("=========== Changed Fields =============")
+            print(process_bitmap(avro.schema.parse(json_schema), changed_fields))
+            print("=========================================")
         print("> Received order confirmation! Updating estimated delivery date...")
         if __debug__:
             time.sleep(2)
