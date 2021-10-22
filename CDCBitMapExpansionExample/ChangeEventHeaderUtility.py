@@ -1,7 +1,7 @@
 """
 ChangeEventHeaderUtility.py
 
-This class provides the utility method to decode the bitmap fields (eg: changedFields)  and return the avro schema field values represented by the bitmap.
+This class provides the utility method to decode the bitmap fields (eg: ChangedEvents)  and return the avro schema field values represented by the bitmap.
 """
 
 from avro.schema import Schema
