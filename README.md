@@ -2,9 +2,7 @@
 
 Welcome to the Pub/Sub API Pilot! This repo contains the critical [proto
 file](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto)
-that you will need to use the API. Refer to the [pilot guide](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf) on how to use it.
-There is also a Python example app in this repo (`InventoryAppExample`
-directory); please read the README carefully.
+that you will need to use the API. Refer to the [pilot guide](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf) on how to use it. There is a Python example app in this repo (`python` directory) as well as multiple Go example apps (`go` directory); please read the corresponding READMEs carefully.
 
 gRPC [officially supports 11 languages](https://grpc.io/docs/languages/), but
 there is unofficial community support in more. To encode and decode events, an
