@@ -6,3 +6,10 @@ Thumbs.db
 ehthumbs.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
+
+# Eclipse project files
+.project
+.idea
+
+# Dependency directory for Go examples
+go/vendor/
