@@ -1,5 +1,10 @@
 # Getting Started with the Pub/Sub API
 
+- [About](#about)
+- [Resources](#resources)
+
+## About
+
 Welcome to the Pub/Sub API Pilot! This repo contains the critical [proto
 file](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto)
 that you will need to use the API. Refer to the [pilot guide](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf) on how to use it. There is a Python example app in this repo (`python` directory) as well as multiple Go example apps (`go` directory); please read the corresponding READMEs carefully.
@@ -22,3 +27,12 @@ officially supported languages have well-supported Avro libraries:
 |PHP|[avro-php](https://github.com/wikimedia/avro-php)|
 |Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
+
+## Resources
+
+**Documentation**
+- [Salesforce Developers Blog Post](https://developer.salesforce.com/blogs/2021/07/pub-sub-api-building-event-driven-integrations-just-got-even-easier)
+- [Salesforce Developers Podcast Episode](https://developer.salesforce.com/podcast/2021/08/episode-93-pub-sub-api-with-emmett-chen-ran)
+
+**Additional Code Samples**
+- [Node client](github.com/pozil/pub-sub-api-node-client)
