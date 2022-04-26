@@ -35,4 +35,4 @@ officially supported languages have well-supported Avro libraries:
 - [Salesforce Developers Podcast Episode](https://developer.salesforce.com/podcast/2021/08/episode-93-pub-sub-api-with-emmett-chen-ran)
 
 **Additional Code Samples**
-- [Node client](github.com/pozil/pub-sub-api-node-client)
+- [Node client](https://github.com/pozil/pub-sub-api-node-client)
