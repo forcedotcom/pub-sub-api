@@ -52,7 +52,7 @@ message EventHeader {
  * Event value that is created by an event producing application.
  */
 message ProducerEvent {
-  // The event's system generated unique identifier
+  // The event's system generated guid
   string id = 1;
   // Schema fingerprint for this event which is hash of the schema
   string schema_id = 2;
