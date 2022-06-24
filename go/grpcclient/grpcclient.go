@@ -12,7 +12,6 @@ import (
 	"github.com/developerforce/pub-sub-api-pilot/go/common"
 	"github.com/developerforce/pub-sub-api-pilot/go/oauth"
 	"github.com/developerforce/pub-sub-api-pilot/go/proto"
-	"github.com/google/uuid"
 	"github.com/linkedin/goavro/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -262,7 +261,6 @@ func (c *PubSubClient) Publish(schema *proto.SchemaInfo) error {
 		TopicName: common.TopicName,
 		Events: []*proto.ProducerEvent{
 			{
-				Id:       uuid.New().String(),
 				SchemaId: schema.GetSchemaId(),
 				Payload:  payload,
 			},
@@ -324,7 +322,6 @@ func (c *PubSubClient) PublishStream(schema *proto.SchemaInfo) error {
 		TopicName: common.TopicName,
 		Events: []*proto.ProducerEvent{
 			{
-				Id:       uuid.New().String(),
 				SchemaId: schema.GetSchemaId(),
 				Payload:  payload,
 			},
@@ -389,7 +386,6 @@ func (c *PubSubClient) PublishStream(schema *proto.SchemaInfo) error {
 					TopicName: common.TopicName,
 					Events: []*proto.ProducerEvent{
 						{
-							Id:       uuid.New().String(),
 							SchemaId: schema.GetSchemaId(),
 							Payload:  payload,
 						},

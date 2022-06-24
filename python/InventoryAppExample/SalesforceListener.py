@@ -52,7 +52,7 @@ def process_confirmation(event, pubsub):
             time.sleep(2)
         day = datetime.fromtimestamp(decoded['EstimatedDeliveryDate__c']).strftime('%Y-%m-%d')
         res = requests.patch(my_url + "/services/data/v52.0/sobjects/Opportunity/"
-                             + decoded['OpptyRecordId__c'], json.dumps({"EstimatedDeliveryDate__c": day}),
+                             + decoded['OpptyRecordId__c'], json.dumps({"Description": "Estimated Delivery Date: " + day}),
                              headers={"Authorization": "Bearer " + pubsub.session_id,
                                       "Content-Type": "application/json"})
         print("  Done!", res)

@@ -49,7 +49,6 @@ def generate_producer_events(schema_id, record_id, obj):
         "EstimatedDeliveryDate__c": int(dt.timestamp()),
         "Weight__c": 58.2}
     req = {
-        "id": "234",
         "schema_id": schema_id,
         "payload": obj.encode(schema, payload),
     }

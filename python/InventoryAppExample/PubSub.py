@@ -85,9 +85,9 @@ class PubSub(object):
             res.__dict__)
 
         # Set metadata headers
-        self.metadata = (('x-sfdc-api-session-token', self.session_id),
-                         ('x-sfdc-instance-url', self.url),
-                         ('x-sfdc-tenant-id', self.tenant_id))
+        self.metadata = (('accesstoken', self.session_id),
+                         ('instanceurl', self.url),
+                         ('tenantid', self.tenant_id))
 
     def make_fetch_request(self, topic):
         """
@@ -166,10 +166,9 @@ class PubSub(object):
         payload = {
             "CreatedDate": int(datetime.now().timestamp()),
             "CreatedById": '005R0000000cw06IAA',  # Your user ID
-            "textt__c": 'text ==t Hello World'
+            "textt__c": 'Hello World'
         }
         req = {
-            "id": "261",  # This can be anything
             "schema_id": schema_id,
             "payload": self.encode(schema, payload)
         }
