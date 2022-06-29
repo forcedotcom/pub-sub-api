@@ -1,14 +1,17 @@
 # Getting Started with the Pub/Sub API
 
-- [About](#about)
-- [Resources](#resources)
+- [About Pub/Sub API](#about-pub/sub-api)
+- [gRPC](#grpc)
+- [Documentation and Blog Posts](#documentation-and-blog-posts)
+- [Code Samples](#code-samples)
 
-## About
+## About Pub/Sub API
+Welcome to Pub/Sub API! Pub/Sub API provides a single interface for publishing and subscribing to platform events, including real-time event monitoring events, and change data capture events. Based on [gRPC](https://grpc.io/docs/what-is-grpc/introduction/) and HTTP/2, Pub/Sub API enables efficient delivery of binary event messages in the Apache Avro format.
 
-Welcome to the Pub/Sub API Pilot! This repo contains the critical [proto
-file](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto)
-that you will need to use the API. Refer to the [pilot guide](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf) on how to use it. There is a Python example app in this repo (`python` directory) as well as multiple Go example apps (`go` directory); please read the corresponding READMEs carefully.
+This repo contains the critical [proto
+file](https://github.com/developerforce/pub-sub-api/blob/main/pubsub_api.proto) that you will need to use the API. 
 
+## gRPC
 gRPC [officially supports 11 languages](https://grpc.io/docs/languages/), but
 there is unofficial community support in more. To encode and decode events, an
 Avro library for your language of choice will be needed. See below for which
@@ -28,11 +31,15 @@ officially supported languages have well-supported Avro libraries:
 |Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
 
-## Resources
-
-**Documentation**
+## Documentation and Blog Posts
+- [Pub/Sub API Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/overview)
+- [Salesforce Architects Blog Post](https://medium.com/salesforce-architects/announcing-pub-sub-api-generally-available-3980c9eaf0b7)
 - [Salesforce Developers Blog Post](https://developer.salesforce.com/blogs/2021/07/pub-sub-api-building-event-driven-integrations-just-got-even-easier)
 - [Salesforce Developers Podcast Episode](https://developer.salesforce.com/podcast/2021/08/episode-93-pub-sub-api-with-emmett-chen-ran)
 
-**Additional Code Samples**
-- [Node client](https://github.com/pozil/pub-sub-api-node-client)
+## Code Samples
+- [Python Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-python-quick-start.html)
+- [Python Code Examples](python/)
+- [Go Code Examples](go/)
+- [Node Client](https://github.com/pozil/pub-sub-api-node-client)
+  
