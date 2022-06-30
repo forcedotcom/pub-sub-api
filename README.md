@@ -2,7 +2,7 @@
 
 - [About Pub/Sub API](#about-pubsub-api)
 - [gRPC](#grpc)
-- [Documentation and Blog Posts](#documentation-and-blog-posts)
+- [Documentation and Blog Posts](#documentation-and-blog-post)
 - [Code Samples](#code-samples)
 
 ## About Pub/Sub API
