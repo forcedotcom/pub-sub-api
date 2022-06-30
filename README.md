@@ -1,6 +1,6 @@
 # Getting Started with the Pub/Sub API
 
-- [About Pub/Sub API](#about-pub/sub-api)
+- [About Pub/Sub API](#about-pubsub-api)
 - [gRPC](#grpc)
 - [Documentation and Blog Posts](#documentation-and-blog-posts)
 - [Code Samples](#code-samples)
@@ -31,11 +31,9 @@ officially supported languages have well-supported Avro libraries:
 |Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
 
-## Documentation and Blog Posts
+## Documentation and Blog Post
 - [Pub/Sub API Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/overview)
 - [Salesforce Architects Blog Post](https://medium.com/salesforce-architects/announcing-pub-sub-api-generally-available-3980c9eaf0b7)
-- [Salesforce Developers Blog Post](https://developer.salesforce.com/blogs/2021/07/pub-sub-api-building-event-driven-integrations-just-got-even-easier)
-- [Salesforce Developers Podcast Episode](https://developer.salesforce.com/podcast/2021/08/episode-93-pub-sub-api-with-emmett-chen-ran)
 
 ## Code Samples
 - [Python Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-python-quick-start.html)
