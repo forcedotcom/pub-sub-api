@@ -31,7 +31,7 @@ officially supported languages have well-supported Avro libraries:
 |Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
 
-## Documentation and Blog Post
+## Documentation, Blog Post and Videos
 - [Pub/Sub API Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/overview)
 - [Salesforce Architects Blog Post](https://medium.com/salesforce-architects/announcing-pub-sub-api-generally-available-3980c9eaf0b7)
 - [Introducing the New gRPC-based Pub Sub API YouTube Developer Quick Takes](https://youtu.be/g9P87_loVVA)
