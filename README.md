@@ -34,10 +34,12 @@ officially supported languages have well-supported Avro libraries:
 ## Documentation and Blog Post
 - [Pub/Sub API Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/overview)
 - [Salesforce Architects Blog Post](https://medium.com/salesforce-architects/announcing-pub-sub-api-generally-available-3980c9eaf0b7)
+- [Introducing the New gRPC-based Pub Sub API YouTube Developer Quick Takes](https://youtu.be/g9P87_loVVA)
 
 ## Code Samples
 - [Python Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-python-quick-start.html)
 - [Python Code Examples](python/)
 - [Go Code Examples](go/)
-- [Node Client](https://github.com/pozil/pub-sub-api-node-client)
+- [E-Bikes Sample Application](https://github.com/trailheadapps/ebikes-lwc)
+- [Pub/Sub API Node Client](https://github.com/pozil/pub-sub-api-node-client)
   
