@@ -40,6 +40,6 @@ officially supported languages have well-supported Avro libraries:
 - [Python Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-python-quick-start.html)
 - [Python Code Examples](python/)
 - [Go Code Examples](go/)
-- [E-Bikes Sample Application](https://github.com/trailheadapps/ebikes-lwc)
-- [Pub/Sub API Node Client](https://github.com/pozil/pub-sub-api-node-client)
-  
+- [Java Code Example](https://github.com/pozil/pub-sub-api-java-client)
+- [Node Code Example](https://github.com/pozil/pub-sub-api-node-client)
+- [E-Bikes Sample Application](https://github.com/trailheadapps/ebikes-lwc) (node)
