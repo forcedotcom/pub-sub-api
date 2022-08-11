@@ -7,7 +7,7 @@ the example, this file would be hosted somewhere outside of Salesforce. The `if
 __debug__` conditionals are to slow down the speed of the app for demoing
 purposes.
 """
-import os, sys
+import os, sys, avro
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
@@ -20,6 +20,7 @@ from PubSub import PubSub
 import pubsub_api_pb2 as pb2
 from utils.ClientUtil import command_line_input
 import time
+from util.ChangeEventHeaderUtility import process_bitmap
 
 my_publish_topic = '/event/NewOrderConfirmation__e'
 latest_replay_id = None
@@ -66,42 +67,61 @@ def process_order(event, pubsub):
     keepalive messages and the latest replay ID through this callback.
     """
     if event.events:
-        payload_bytes = event.events[0].event.payload
-        schema_id = event.events[0].event.schema_id
-        decoded = pubsub.decode(pubsub.get_schema_json(schema_id),
-                                payload_bytes)
+        print("Number of events received in FetchResponse: ", len(event.events))
+        # If all requested events are delivered, release the semaphore
+        # so that a new FetchRequest gets sent by `PubSub.fetch_req_stream()`.
+        if event.pending_num_requested == 0:
+            pubsub.semaphore.release()
 
-        # Do not process updates to EstimatedDeliveryDate__c field
-        delivery_date_field = '0x01000000'
-        if delivery_date_field in decoded['ChangeEventHeader']['changedFields']:
-            return
+        for evt in event.events:
+            payload_bytes = evt.event.payload
+            schema_id = evt.event.schema_id
+            json_schema = pubsub.get_schema_json(schema_id)
+            decoded_event = pubsub.decode(pubsub.get_schema_json(schema_id),
+                                    payload_bytes)
 
-        record_id = decoded['ChangeEventHeader']['recordIds'][0]
+            print("Received event payload: \n", decoded_event)
+            #  A change event contains the ChangeEventHeader field. Check if received event is a change event. 
+            if 'ChangeEventHeader' in decoded_event:
+                # Decode the bitmap fields contained within the ChangeEventHeader. For example, decode the 'changedFields' field.
+                # An example to process bitmap in 'changedFields'
+                changed_fields = decoded_event['ChangeEventHeader']['changedFields']
+                converted_changed_fields = process_bitmap(avro.schema.parse(json_schema), changed_fields)
+                print("Change Type: " + decoded_event['ChangeEventHeader']['changeType'])
+                print("=========== Changed Fields =============")
+                print(converted_changed_fields)
+                print("=========================================")
+                # Do not process updates made by the SalesforceListener app to the opportunity record delivery date 
+                if decoded_event['ChangeEventHeader']['changeOrigin'].find('client=SalesforceListener') != -1:
+                    print("Skipping change event because it is an update to the delivery date by SalesforceListener.")
+                    return
 
-        if __debug__:
-            time.sleep(10)
-        print("> Received new order! Processing order...")
-        if __debug__:
-            time.sleep(4)
-        print("  Done! Order replicated in inventory system.")
-        if __debug__:
-            time.sleep(2)
-        print("> Calculating estimated delivery date...")
-        if __debug__:
-            time.sleep(2)
-        print("  Done! Sending estimated delivery date back to Salesforce.")
-        if __debug__:
-            time.sleep(10)
+            record_id = decoded_event['ChangeEventHeader']['recordIds'][0]
 
-        topic_info = pubsub.get_topic(topic_name=my_publish_topic)
+            if __debug__:
+                time.sleep(10)
+            print("> Received new order! Processing order...")
+            if __debug__:
+                time.sleep(4)
+            print("  Done! Order replicated in inventory system.")
+            if __debug__:
+                time.sleep(2)
+            print("> Calculating estimated delivery date...")
+            if __debug__:
+                time.sleep(2)
+            print("  Done! Sending estimated delivery date back to Salesforce.")
+            if __debug__:
+                time.sleep(10)
 
-        # Publish NewOrderConfirmation__e event
-        res = pubsub.stub.Publish(make_publish_request(topic_info.schema_id, record_id, pubsub),
-                                  metadata=pubsub.metadata)
-        if res.results[0].replay_id:
-            print("> Event published successfully.")
-        else:
-            print("> Failed publishing event.")
+            topic_info = pubsub.get_topic(topic_name=my_publish_topic)
+
+            # Publish NewOrderConfirmation__e event
+            res = pubsub.stub.Publish(make_publish_request(topic_info.schema_id, record_id, pubsub),
+                                    metadata=pubsub.metadata)
+            if res.results[0].replay_id:
+                print("> Event published successfully.")
+            else:
+                print("> Failed publishing event.")
     else:
         print("[", time.strftime('%b %d, %Y %l:%M%p %Z'), "] The subscription is active.")
 
@@ -114,7 +134,7 @@ def run(argument_dict):
     cdc_listener.auth()
 
     # Subscribe to Opportunity CDC events
-    cdc_listener.subscribe('/data/OpportunityChangeEvent', process_order)
+    cdc_listener.subscribe('/data/OpportunityChangeEvent', "LATEST", "", 1, process_order)
 
 
 if __name__ == '__main__':
