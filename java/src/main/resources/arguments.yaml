@@ -1,0 +1,44 @@
+# 'arguments.yaml' contains the required and optional configurations for running the examples.
+#
+# Note: Please ensure to specify a value of `null` to all optional configurations when
+# you do not wish to specify a value for the same. Some optional configurations will be
+# initialised with default values specified below.
+
+# =========================
+# Required Configurations:
+# =========================
+# Pub/Sub API Endpoint
+PUBSUB_HOST: api.stage.pubsub.salesforce.com
+# Pub/Sub API Host
+PUBSUB_PORT: 7443
+# Your Salesforce Login URL
+LOGIN_URL: https://ds7000000lpyumay-dev-ed.stmfa.my.stm.salesforce.com
+
+# For authentication, you can use either username/password or sessionToken/tenantId types.
+# Either one of the combinations is required. Please specify `null` values to the unused type.
+# Your Salesforce Username
+USERNAME: null
+# Your Salesforce Password
+PASSWORD: null
+# Your Salesforce org Tenant ID
+TENANT_ID: CORE/prod/00DS7000000lpYUMAY
+# Your Salesforce Session Token
+ACCESS_TOKEN: "00DS7000000lpYU!AQMAQHN_P0E98M1TXvmYFYo8X4Aeq7UtUN5_4lNNRMC.LchxXpA0L__o0qhDpAw2u4jzu4.WvCyMiD6PRIIqtsqeFa_xxO6A"
+
+# =========================
+# Optional configurations:
+# =========================
+# Topic to publish/subscribe to (default: /event/CarMaintenance__e)
+TOPIC: null
+# Number of Events to publish (default: 5)
+NUMBER_OF_EVENTS_TO_PUBLISH: 3
+# Number of Events to subscribe (default: Integer.MAX_VALUE)
+NUMBER_OF_EVENTS_TO_SUBSCRIBE: null
+# Use Plaintext Channel (default: false)
+USE_PLAINTEXT_CHANNEL: false
+# Use Provided Login Url (default: false)
+USE_PROVIDED_LOGIN_URL: null
+# ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})
+REPLAY_PRESET: EARLIEST
+# Replay ID in ByteString
+REPLAY_ID: null
