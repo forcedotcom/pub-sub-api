@@ -39,24 +39,27 @@ class PubSub(object):
     Class with helpers to use the Salesforce Pub/Sub API.
     """
     semaphore = threading.Semaphore(1)
+    json_schema_dict = {}
 
     def __init__(self, argument_dict):
-        self.url = get_argument('instance_url', argument_dict)
+        self.url = get_argument('url', argument_dict)
         self.username = get_argument('username', argument_dict)
         self.password = get_argument('password', argument_dict)
         self.metadata = None
-        if get_argument('https', argument_dict) == 'true':
-            grpc_host = get_argument('grpcHost', argument_dict)
-            grpc_port = get_argument('grpcPort', argument_dict)
-            url = grpc_host + ":" + grpc_port
-            channel = grpc.secure_channel(url, secure_channel_credentials)
-        else:
-            channel = grpc.insecure_channel('localhost:7011')
+        grpc_host = get_argument('grpcHost', argument_dict)
+        grpc_port = get_argument('grpcPort', argument_dict)
+        pubsub_url = grpc_host + ":" + grpc_port
+        channel = grpc.secure_channel(pubsub_url, secure_channel_credentials)
         self.stub = pb2_grpc.PubSubStub(channel)
         self.session_id = None
         self.pb2 = pb2
-        self.tenant_id = get_argument('tenant_id', argument_dict)
         self.topic_name = get_argument('topic', argument_dict)
+        # If the API version is not provided as an argument, use a default value 
+        if get_argument('apiVersion', argument_dict) == None:
+            self.apiVersion = '55.0'
+        else:
+            # Otherwise, get the version from the argument
+            self.apiVersion = get_argument('apiVersion', argument_dict)
 
     def auth(self):
         """
@@ -65,7 +68,7 @@ class PubSub(object):
         to create a tuple of metadata headers, which are needed for every RPC
         call.
         """
-        url_suffix = '/services/Soap/u/43.0/'
+        url_suffix = '/services/Soap/u/' + self.apiVersion + '/'
         headers = {'content-type': 'text/xml', 'SOAPAction': 'Login'}
         xml = "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' " + \
               "xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' " + \
@@ -84,27 +87,43 @@ class PubSub(object):
             print("An exception occurred. Check the response XML below:", 
             res.__dict__)
 
+        # Get org ID from UserInfo
+        uinfo = res_xml[6]
+        # Org ID
+        self.tenant_id = uinfo[8].text;
+
         # Set metadata headers
         self.metadata = (('accesstoken', self.session_id),
                          ('instanceurl', self.url),
                          ('tenantid', self.tenant_id))
 
-    def make_fetch_request(self, topic):
+    def make_fetch_request(self, topic, replay_type, replay_id, num_requested):
         """
         Creates a FetchRequest per the proto file.
         """
+        replay_preset = None
+        match replay_type:
+            case "LATEST":
+                replay_preset = pb2.ReplayPreset.LATEST
+            case "EARLIEST":
+                replay_preset = pb2.ReplayPreset.EARLIEST
+            case "CUSTOM":
+                replay_preset = pb2.ReplayPreset.CUSTOM
+            case _:
+                raise ValueError('Invalid Replay Type ' + replay_type)
         return pb2.FetchRequest(
             topic_name=topic,
-            replay_preset=pb2.LATEST,
-            num_requested=1)
+            replay_preset=replay_preset,
+            replay_id=bytes.fromhex(replay_id),
+            num_requested=num_requested)
 
-    def fetch_req_stream(self, topic):
+    def fetch_req_stream(self, topic, replay_type, replay_id, num_requested):
         """
         Returns a FetchRequest stream for the Subscribe RPC.
         """
         while True:
             self.semaphore.acquire()
-            yield self.make_fetch_request(topic)
+            yield self.make_fetch_request(topic, replay_type, replay_id, num_requested)
 
     def encode(self, schema, payload):
         """
@@ -154,9 +173,12 @@ class PubSub(object):
         """
         Uses GetSchema RPC to retrieve schema given a schema ID.
         """
-        res = self.stub.GetSchema(pb2.SchemaRequest(schema_id=schema_id),
-                                  metadata=self.metadata)
-        return res.schema_json
+        # If the schema is not found in the dictionary, get the schema and store it in the dictionary
+        if schema_id not in self.json_schema_dict or self.json_schema_dict[schema_id]==None:
+            res = self.stub.GetSchema(pb2.SchemaRequest(schema_id=schema_id), metadata=self.metadata)
+            self.json_schema_dict[schema_id] = res.schema_json
+
+        return self.json_schema_dict[schema_id]
 
     def generate_producer_events(self, schema, schema_id):
         """
@@ -174,7 +196,7 @@ class PubSub(object):
         }
         return [req]
 
-    def subscribe(self, topic, callback):
+    def subscribe(self, topic, replay_type, replay_id, num_requested, callback):
         """
         Calls the Subscribe RPC defined in the proto file and accepts a
         client-defined callback to handle any events that are returned by the
@@ -183,10 +205,9 @@ class PubSub(object):
         designed and may not be necessary for other languages--Java, for
         example, does not need this). 
         """
-        sub_stream = self.stub.Subscribe(self.fetch_req_stream(topic),
-                                         metadata=self.metadata)
+        sub_stream = self.stub.Subscribe(self.fetch_req_stream(topic, replay_type, replay_id, num_requested), metadata=self.metadata)
+        print("> Subscribed to", topic)
         for event in sub_stream:
-            self.semaphore.release()
             callback(event, self)
 
     def publish(self, topic_name, schema, schema_id):

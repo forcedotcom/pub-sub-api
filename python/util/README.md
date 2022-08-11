@@ -26,8 +26,7 @@ In this example, `changedFields` is encoded as a bitmap string. This method is
 more space efficient than using a list of field names. A bit set to 1 in the
 `changedFields` bitmap value indicates that the field at the corresponding
 position in the Avro schema was changed. More information about bitmap fields
-can be found under "Bitmap Fields in Change Events" in the [onboarding
-guide](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf).
+can be found in [Event Deserialization Considerations](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/event-deserialization-considerations.html) in the Pub/Sub API documentation.
 
 We have provided this example to demonstrate how bitmap values can be decoded
 so that they are human-readable and you can process the event by using the

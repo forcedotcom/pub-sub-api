@@ -22,7 +22,6 @@ import time
 from PubSub import PubSub
 from utils.ClientUtil import command_line_input
 
-my_url = 'https://ebapi.my.stmpb.stm.salesforce.com'
 latest_replay_id = None
 
 
@@ -36,26 +35,40 @@ def process_confirmation(event, pubsub):
     API's subscribe method sends keepalive messages and the latest replay ID
     through this callback.
     """
+
     if event.events:
-        payload_bytes = event.events[0].event.payload
-        json_schema = pubsub.get_schema_json(event.events[0].event.schema_id)
-        decoded_event = pubsub.decode(json_schema, payload_bytes)
-        # print(decoded_event)
-        if 'ChangeEventHeader' in decoded_event:
-            # An example to process bitmap in 'changedFields'
-            changed_fields = decoded_event['ChangeEventHeader']['changedFields']
-            print("=========== Changed Fields =============")
-            print(process_bitmap(avro.schema.parse(json_schema), changed_fields))
-            print("=========================================")
-        print("> Received order confirmation! Updating estimated delivery date...")
-        if __debug__:
-            time.sleep(2)
-        day = datetime.fromtimestamp(decoded['EstimatedDeliveryDate__c']).strftime('%Y-%m-%d')
-        res = requests.patch(my_url + "/services/data/v52.0/sobjects/Opportunity/"
-                             + decoded['OpptyRecordId__c'], json.dumps({"Description": "Estimated Delivery Date: " + day}),
-                             headers={"Authorization": "Bearer " + pubsub.session_id,
-                                      "Content-Type": "application/json"})
-        print("  Done!", res)
+        print("Number of events received in FetchResponse: ", len(event.events))
+        # If all requested evetns are delivered, release the semaphore
+        # so that a new FetchRequest gets sent by `PubSub.fetch_req_stream()`.
+        if event.pending_num_requested == 0:
+            pubsub.semaphore.release()
+
+        for evt in event.events:
+            # Get the event payload and shema, then decode the payload
+            payload_bytes = evt.event.payload
+            json_schema = pubsub.get_schema_json(evt.event.schema_id)
+            decoded_event = pubsub.decode(json_schema, payload_bytes)
+            # print(decoded_event)
+            #  A change event contains the ChangeEventHeader field. Check if received event is a change event. 
+            if 'ChangeEventHeader' in decoded_event:
+                # Decode the bitmap fields contained within the ChangeEventHeader. For example, decode the 'changedFields' field.
+                # An example to process bitmap in 'changedFields'
+                changed_fields = decoded_event['ChangeEventHeader']['changedFields']
+                print("Change Type: " + decoded_event['ChangeEventHeader']['changeType'])
+                print("=========== Changed Fields =============")
+                print(process_bitmap(avro.schema.parse(json_schema), changed_fields))
+                print("=========================================")
+            print("> Received order confirmation! Updating estimated delivery date...")
+            if __debug__:
+                time.sleep(2)
+            # Update the Desription field of the opportunity with the estimated delivery date with a REST request
+            day = datetime.fromtimestamp(decoded_event['EstimatedDeliveryDate__c']).strftime('%Y-%m-%d')
+            res = requests.patch(pubsub.url + "/services/data/v" + pubsub.apiVersion + "/sobjects/Opportunity/"
+                                 + decoded_event['OpptyRecordId__c'], json.dumps({"Description": "Estimated Delivery Date: " + day}),
+                                 headers={"Authorization": "Bearer " + pubsub.session_id,
+                                          "Content-Type": "application/json",
+                                          "Sforce-Call-Options": "client=SalesforceListener"})
+            print("  Done!", res)
     else:
         print("[", time.strftime('%b %d, %Y %l:%M%p %Z'), "] The subscription is active.")
 
@@ -67,7 +80,7 @@ def run(argument_dict):
     sfdc_updater.auth()
 
     # Subscribe to /event/NewOrderConfirmation__e events
-    sfdc_updater.subscribe('/event/NewOrderConfirmation__e', process_confirmation)
+    sfdc_updater.subscribe('/event/NewOrderConfirmation__e', "LATEST", "", 1, process_confirmation)
 
 
 if __name__ == '__main__':
