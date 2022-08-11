@@ -28,12 +28,7 @@ In the `src/main` directory of the project, you will find several sub-directorie
        - `Cost` (Number)
        - `Mileage` (Number)
        - `WorkDescription` (Text, 200)
-7. For the examples in the `accountupdateapp` package, another custom **_NewAccount_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. Ensure your NewAccount platform event matches the following structure:
-   - Standard Fields
-       - Label: `NewAccount`
-       - Plural Label: `NewAccounts`
-   - Custom Fields
-       - `AccountRecordId` (Text, 20)
+7. For the examples in the `accountupdateapp` package, another custom **_NewAccount_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. [More info here](src/main/java/accountupdateapp/README.md).
 
 ### Execution
 1. Update the configurations in the `src/main/resources/arguments.yaml` file. The required configurations will apply to all the examples and the optional ones depends on which example is being executed. The configurations include:
