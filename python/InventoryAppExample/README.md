@@ -34,3 +34,5 @@ Demos](https://www.salesforce.com/trailheadx) and click `Integrations &
 Analytics` > `Platform APIs` to watch it.
 
 The proto file for the API can be found [here](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto).
+
+This example uses Python features that require Python version 3.10 or later, such as the `match` statement. 
