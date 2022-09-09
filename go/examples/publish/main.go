@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/developerforce/pub-sub-api-pilot/go/common"
-	"github.com/developerforce/pub-sub-api-pilot/go/grpcclient"
+	"github.com/developerforce/pub-sub-api/go/common"
+	"github.com/developerforce/pub-sub-api/go/grpcclient"
 )
 
 func main() {

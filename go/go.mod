@@ -1,4 +1,4 @@
-module github.com/developerforce/pub-sub-api-pilot/go
+module github.com/developerforce/pub-sub-api/go
 
 go 1.18
 

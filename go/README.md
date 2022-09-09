@@ -15,7 +15,7 @@ this project. The `*.pb.go` files contain helper functions and structs that will
 2. Clone this project.
 3. Run `go mod vendor` from the `go` directory to fetch dependencies.
     - NOTE: At this time the `vendor` directory has not been committed to this repo so you need to manually run the `go mod vendor` command to fetch dependencies. If the `vendor` directory is committed to the repo in the future, this step can be skipped.
-4. Use a Salesforce org that's enabled for the pilot. Get the username, password, and login URL.
+4. Use a Salesforce org. Get the username, password, and login URL.
 5. Create a custom CarMaintenance [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) in your Salesforce org. Ensure your CarMaintenance platform event matches the following structure:
 - Standard Fields
     - Label: CarMaintenance
@@ -41,7 +41,7 @@ Pub/Sub API allows clients using the `Subscribe` RPC to specify one of the follo
 * `CUSTOM`
 * `EARLIEST`
 
-For a description of these replay options, refer to the "Replaying an Event Stream" section in [Pub/Sub API (Pilot)](https://resources.docs.salesforce.com/rel1/doc/en-us/static/pdf/Salesforce_Pub_Sub_API_Pilot.pdf).
+For a description of these replay options, refer to the "Replaying an Event Stream" section in the [Pub/Sub API docs](https://developer.salesforce.com/docs/platform/pub-sub-api/references/methods/subscribe-rpc.html#replaying-an-event-stream).
 
 The subscribe example in this repo is compatible with all three options outlined above. To set a subscription option, update the `ReplayPreset` and `ReplayId` options in the `common.go` file. See the following examples:
 * `LATEST`
@@ -60,7 +60,7 @@ The subscribe example in this repo is compatible with all three options outlined
 1. Install protoc, protoc-gen-go, and protoc-gen-go-grpc and ensure the binaries are available in your PATH. See the [gRPC quick start docs](https://grpc.io/docs/languages/go/quickstart/#prerequisites) for more info.
 
 ## Generating the *.pb.go Files
-1. Fetch the most current [proto file](https://github.com/developerforce/pub-sub-api-pilot/blob/main/pubsub_api.proto) and copy it to your own project.
+1. Fetch the most current [proto file](https://github.com/developerforce/pub-sub-api/blob/main/pubsub_api.proto) and copy it to your own project.
 2. Modify the `option go_package` line to match your desired import path.
 3. Generate the Go files from the proto file with the `protoc` command. As an example, if you copied the proto file to `proto/pubsub_api.proto` then you can generate the `*.pb.go` files by running the following command from the root of your project:
 ```bash

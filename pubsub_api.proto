@@ -9,7 +9,7 @@ option java_multiple_files = true;
 option java_package = "com.salesforce.eventbus.protobuf";
 option java_outer_classname = "PubSubProto";
 
-option go_package = "github.com/developerforce/pub-sub-api-pilot/go/proto";
+option go_package = "github.com/developerforce/pub-sub-api/go/proto";
 
 /*
  * Contains information about a topic and uniquely identifies it. TopicInfo is returned by the GetTopic RPC method.
@@ -55,7 +55,7 @@ message EventHeader {
  * Represents an event that an event publishing app creates.
  */
 message ProducerEvent {
-  // The event's system generated guid
+  // Either a user-provided ID or a system generated guid
   string id = 1;
   // Schema fingerprint for this event which is hash of the schema
   string schema_id = 2;
@@ -87,6 +87,8 @@ message PublishResult {
   bytes replay_id = 1;
   // Publish error if any
   Error error = 2;
+  // Correlation key of the ProducerEvent
+  string correlationKey = 3;
 }
 
 // Contains error information for an error that an RPC method returns.

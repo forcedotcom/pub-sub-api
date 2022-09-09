@@ -3,7 +3,7 @@ package common
 import (
 	"time"
 
-	"github.com/developerforce/pub-sub-api-pilot/go/proto"
+	"github.com/developerforce/pub-sub-api/go/proto"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 	Appetite     int32  = 5
 
 	// gRPC server variables
-	GRPCEndpoint    = "api.pilot.pubsub.salesforce.com:7443"
+	GRPCEndpoint    = "api.pubsub.salesforce.com:7443"
 	GRPCDialTimeout = 5 * time.Second
 	GRPCCallTimeout = 5 * time.Second
 
