@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/developerforce/pub-sub-api-pilot/go/common"
+	"github.com/developerforce/pub-sub-api/go/common"
 )
 
 const (

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/developerforce/pub-sub-api-pilot/go/common"
-	"github.com/developerforce/pub-sub-api-pilot/go/oauth"
-	"github.com/developerforce/pub-sub-api-pilot/go/proto"
+	"github.com/developerforce/pub-sub-api/go/common"
+	"github.com/developerforce/pub-sub-api/go/oauth"
+	"github.com/developerforce/pub-sub-api/go/proto"
 	"github.com/linkedin/goavro/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
