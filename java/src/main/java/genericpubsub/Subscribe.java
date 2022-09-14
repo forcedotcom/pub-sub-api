@@ -16,14 +16,16 @@ import utility.CommonContext;
 import utility.ExampleConfigurations;
 
 /**
- * A single-topic subscriber that consumes events using Event Bus API Subscribe RPC.
+ * A single-topic subscriber that consumes events using Event Bus API Subscribe RPC. The example demonstrates how to
+ * subscribe to a fixed number of events and ends when they are received. It also demonstrates a basic flow control
+ * strategy. This example does not implement any retry logic in case of failures. 
  *
  * Example:
- * ./run.sh genericpubsub.SubscribeStream
+ * ./run.sh genericpubsub.Subscribe
  *
  * @author sidd0610
  */
-public class SubscribeStream extends CommonContext {
+public class Subscribe extends CommonContext {
 
     public static int BATCH_SIZE;
     public static AtomicBoolean receivedAllEvents = new AtomicBoolean(false);
@@ -37,15 +39,15 @@ public class SubscribeStream extends CommonContext {
     private ByteString customReplayId;
     private ByteString storedReplay;
 
-    public SubscribeStream(ExampleConfigurations exampleConfigurations) {
+    public Subscribe(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
-        subscribeStreamConstructorHelper(exampleConfigurations, getDefaultResponseStreamObserver());
+        subscribeConstructorHelper(exampleConfigurations, getDefaultResponseStreamObserver());
     }
 
     // Constructor that can be used in other examples with a custom StreamObserver.
-    public SubscribeStream(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
+    public Subscribe(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
         super(exampleConfigurations);
-        subscribeStreamConstructorHelper(exampleConfigurations, responseStreamObserver);
+        subscribeConstructorHelper(exampleConfigurations, responseStreamObserver);
     }
 
     /**
@@ -54,10 +56,10 @@ public class SubscribeStream extends CommonContext {
      * @param exampleConfigurations
      * @param responseStreamObserver
      */
-    public void subscribeStreamConstructorHelper(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
+    public void subscribeConstructorHelper(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
         receivedAllEvents.set(false);
         Integer numberOfEvents = exampleConfigurations.getNumberOfEventsToSubscribe();
-        this.totalEventsRequested = (numberOfEvents == null || numberOfEvents == 0) ? Integer.MAX_VALUE : numberOfEvents;
+        this.totalEventsRequested = (numberOfEvents == null || numberOfEvents == 0) ? 100 : numberOfEvents;
         this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribe());
         this.responseStreamObserver = responseStreamObserver;
         this.setupTopicDetails(exampleConfigurations.getTopic(), false, true);
@@ -91,9 +93,8 @@ public class SubscribeStream extends CommonContext {
         return new StreamObserver<FetchResponse>() {
             @Override
             public void onNext(FetchResponse fetchResponse) {
-                logger.info("Received batch of " + fetchResponse.getEventsList().size()+ " events");
+                logger.info("Received batch of " + fetchResponse.getEventsList().size() + " events");
                 logger.info("RPC ID: " + fetchResponse.getRpcId());
-                logger.info("Replay ID: " + fetchResponse.getLatestReplayId());
                 for(ConsumerEvent ce : fetchResponse.getEventsList()) {
                     try {
                         logger.info(deserialize(schema, ce.getEvent().getPayload()).toString());
@@ -102,18 +103,22 @@ public class SubscribeStream extends CommonContext {
                     }
                     receivedEvents.addAndGet(1);
                 }
+                storedReplay = fetchResponse.getLatestReplayId();
 
-                if (receivedEvents.get() < totalEventsRequested) {
-                    storedReplay = fetchResponse.getLatestReplayId();
+                // Implementing a basic flow control strategy where the next fetchRequest is sent only after the
+                // requested number of events in the previous fetchRequest(s) are received.
+                if (fetchResponse.getPendingNumRequested() == 0) {
                     fetchMore(BATCH_SIZE);
-                } else if (receivedEvents.get() >= totalEventsRequested) {
+                }
+                if (receivedEvents.get() >= totalEventsRequested) {
                     receivedAllEvents.set(true);
                 }
             }
 
             @Override
             public void onError(Throwable t) {
-                printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                printStatusRuntimeException("Error during Subscribe", (Exception) t);
+                // Retry logic should be added here if needed as this example does not demonstrate retries in case of failures.
             }
 
             @Override
@@ -148,7 +153,7 @@ public class SubscribeStream extends CommonContext {
             final long elapsed = Duration.between(startTime, Instant.now()).getSeconds();
 
             if (elapsed > maxTimeout) {
-                logger.info("Exceeded timeout of "+ maxTimeout +" while waiting for events. Received " + receivedEvents.get() + " events. Exiting");
+                logger.info("Exceeded timeout of " + maxTimeout + " while waiting for events. Received " + receivedEvents.get() + " events. Exiting");
                 return;
             }
 
@@ -197,7 +202,9 @@ public class SubscribeStream extends CommonContext {
     @Override
     public synchronized void close() {
         try {
-            serverStream.onCompleted();
+            if (serverStream != null) {
+                serverStream.onCompleted();
+            }
         } catch (Exception e) {
             logger.info(e.toString());
         }
@@ -209,11 +216,11 @@ public class SubscribeStream extends CommonContext {
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (SubscribeStream subscribeStream = new SubscribeStream(exampleConfigurations)) {
-            subscribeStream.startSubscription();
-            subscribeStream.waitForEvents();
+        try (Subscribe subscribe = new Subscribe(exampleConfigurations)) {
+            subscribe.startSubscription();
+            subscribe.waitForEvents();
         } catch (Exception e) {
-            logger.info(e.toString());
+            CommonContext.printStatusRuntimeException("Error during Subscribe", e);
         }
     }
 }

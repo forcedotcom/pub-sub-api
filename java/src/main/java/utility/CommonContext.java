@@ -144,6 +144,7 @@ public class CommonContext implements AutoCloseable {
                 }
             } catch (final Exception ex) {
                 logger.error("Error during fetching topic", ex);
+                close();
                 throw ex;
             }
         }
@@ -170,6 +171,7 @@ public class CommonContext implements AutoCloseable {
      * @return
      */
     public GenericRecord createCarMaintenanceRecord(Schema schema) {
+        // Please remember to use the appropriate orgId for the CreatedById field.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
                 .set("CreatedById", "005xx000001Svwo").set("Mileage__c", 95443.0).set("Cost__c", 99.40)
                 .set("WorkDescription__c", "Replaced front brakes").build();
@@ -184,6 +186,7 @@ public class CommonContext implements AutoCloseable {
      * @return
      */
     public GenericRecord createCarMaintenanceRecord(Schema schema, final int counter) {
+        // Please remember to use the appropriate orgId for the CreatedById field.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
                 .set("CreatedById", "005xx000001Svwo").set("Mileage__c", 95443.0).set("Cost__c", 99.40)
                 .set("WorkDescription__c", "Replaced front brakes; event: " + counter).build();
@@ -275,6 +278,7 @@ public class CommonContext implements AutoCloseable {
             ep.setAccessToken(requiredParams.getAccessToken());
             ep.setTenantId(requiredParams.getTenantId());
         }
+        ep.setPlaintextChannel(requiredParams.usePlaintextChannel());
     }
 
     /**

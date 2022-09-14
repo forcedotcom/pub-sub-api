@@ -2,6 +2,7 @@ package genericpubsub;
 
 import org.apache.avro.Schema;
 
+import com.google.protobuf.Descriptors;
 import com.salesforce.eventbus.protobuf.SchemaInfo;
 import com.salesforce.eventbus.protobuf.SchemaRequest;
 import com.salesforce.eventbus.protobuf.TopicInfo;
@@ -29,6 +30,11 @@ public class GetSchema extends CommonContext {
         // Used to retrieve the schema id in this example.
         TopicInfo topicInfo = blockingStub.getTopic(TopicRequest.newBuilder().setTopicName(topicName).build());
         logger.info("GetTopic Call RPC ID: " + topicInfo.getRpcId());
+
+        topicInfo.getAllFields().entrySet().forEach(entry -> {
+            System.out.println(entry.getKey() + " : " + entry.getValue());
+        });
+
         SchemaRequest schemaRequest = SchemaRequest.newBuilder().setSchemaId(topicInfo.getSchemaId()).build();
 
         // Use the GetSchema RPC to get the schema info of the topic.
@@ -47,14 +53,14 @@ public class GetSchema extends CommonContext {
 
             // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
             // order to close the resources used.
-            try (GetSchema schema = new GetSchema(exampleConfigurations)) {
-                schema.getSchema(exampleConfigurations.getTopic());
+            try (GetSchema example = new GetSchema(exampleConfigurations)) {
+                example.getSchema(exampleConfigurations.getTopic());
             } catch (Exception e) {
                 CommonContext.printStatusRuntimeException("Getting schema", e);
-                System.exit(1);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            logger.error(e.toString());
         }
     }
+
 }

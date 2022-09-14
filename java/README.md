@@ -1,14 +1,14 @@
 # Pub/Sub API Java Examples
 
 ## Overview
-This directory contains some simple Java Examples that can be used with the Pub/Sub API. These examples range from generic Publish and Subscribe, processing CustomEventHeaders in Change Data Capture (CDC) events and also a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
+This directory contains some simple Java Examples that can be used with the Pub/Sub API. These examples range from generic Publish and Subscribe, processing CustomEventHeaders in change events and also a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
 
 ## Project Structure
 In the `src/main` directory of the project, you will find several sub-directories as follows:
 * `java/`: This directory contains the main source code for all the examples grouped into separate packages:
-  * `accountupdateapp/`: This package contains the examples for updating an Account standard object with an AccountNumber
+  * `accountupdateapp/`: This package contains the examples for updating an Account standard object with an AccountNumber.
   * `genericpubsub/`: This package contains the examples covering the general flows of all RPCs of Pub/Sub API. 
-  * `processchangeeventheader/`: This package contains an example for extracting the changed fields from a bitmap value in a CDC event.
+  * `processchangeeventheader/`: This package contains an example for extracting the changed fields from a bitmap value in a change event.
   * `utility`: This package contains a list of utility classes used across all the examples. 
 * `proto/` - This directory contains the same `pubsub_api.proto` file found at the root of this repo. The plugin used to generate the sources requires for this proto file to be present in the `src` directory.  
 * `resources/` - This directory contains a list of resources needed for running the examples.
@@ -17,7 +17,7 @@ In the `src/main` directory of the project, you will find several sub-directorie
 ### Prerequisites
 1. Install [Java 11](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html), [Maven](https://maven.apache.org/install.html).
 2. Clone this project.
-3. Run `maven clean install` from the `java` directory to build the project and generate required sources from the proto file.
+3. Run `mvn clean install` from the `java` directory to build the project and generate required sources from the proto file.
 4. The `arguments.yaml` file in the `src/main/resources` sub-directory contains a list of required and optional configurations needed to run the examples. The file contains detailed comments on how to set the configurations.
 5. Get the username, password, and login URL of the Salesforce org you wish to use.
 6. For the examples in `genericpubsub` package, a custom **_CarMaintenance_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. Ensure your CarMaintenance platform event matches the following structure:
@@ -41,7 +41,7 @@ In the `src/main` directory of the project, you will find several sub-directorie
    2. Optional Parameters:
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
-       * `NUMBER_OF_EVENTS_TO_SUBSCRIBE`: Specify the number of events to subscribe while using the SubscribeStream RPC.
+       * `NUMBER_OF_EVENTS_TO_SUBSCRIBE`: Specify the number of events to subscribe while using the Subscribe RPC.
        * `USE_PLAINTEXT_CHANNEL`: Specify whether a plaintext channel has to be used.
        * `USE_PROVIDED_LOGIN_URL`: The LOGIN_URL required parameter is usually translated into a specific my domain URL for connecting to the Salesforce org. In case the supplied LOGIN_URL has to be used, set this configuration to `true`.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
@@ -50,12 +50,11 @@ In the `src/main` directory of the project, you will find several sub-directorie
    * Example: `./run.sh genericpubsub.PublishStream`
 
 ## Implementation
-This repo can be used as a reference point for clients looking to create a Java app to integrate with Pub/Sub API. Note that the project structure and the examples included in this repo are intended for demo purposes only and clients are free to implement their own Java apps in any way they see fit. 
+- This repo can be used as a reference point for clients looking to create a Java app to integrate with Pub/Sub API. Note that the project structure and the examples included in this repo are intended for demo purposes only and clients are free to implement their own Java apps in any way they see fit.
+- The Subscribe RPC examples demonstrates a basic flow control strategy where a new `fetchRequest` is sent only after the requested number of events in the previous `fetchRequest(s)` are received. Custom flow control strategies can be implemented as needed. More info on flow control available [here](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html).
 
 # Limitations
-1. No support for C2C type of authentication. This may be included in future updates.
-2. No support for auth token refreshes - At some point the authentication token will expire. At this time, these examples do not handle re-authentication.
-3. No guarantees that streams will remain open with `PublishStream` examples - Pub/Sub API has idle timeouts and will close idle streams. If a stream is closed while running these examples, you will most likely need to stop and restart.
-4. No support for republishing on error - If an error occurs while publishing the relevant examples will surface the error but will not attempt to republish the event.
-5. No security guarantees - Teams using these examples for reference will need to do their own security audits to ensure the dependencies introduced here can be safely used.
-6. No performance testing - These examples have not been perf tested.
+1. No guarantees that streams will remain open with `PublishStream` examples - Pub/Sub API has idle timeouts and will close idle streams. If a stream is closed while running these examples, you will most likely need to stop and restart.
+2. No support for republishing on error - If an error occurs while publishing the relevant examples will surface the error but will not attempt to republish the event.
+3. No security guarantees - Teams using these examples for reference will need to do their own security audits to ensure the dependencies introduced here can be safely used.
+4. No performance testing - These examples have not been perf tested.

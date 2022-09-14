@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.eventbus.protobuf.ConsumerEvent;
 import com.salesforce.eventbus.protobuf.FetchResponse;
 
-import genericpubsub.SubscribeStream;
+import genericpubsub.Subscribe;
 import io.grpc.stub.StreamObserver;
 import utility.CommonContext;
 import utility.ExampleConfigurations;
@@ -26,16 +26,16 @@ import utility.ExampleConfigurations;
  * to the Opportunity object.
  *
  * Example:
- * ./run.sh accountupdateapp.ProcessChangeEventHeader
+ * ./run.sh processchangeeventheader.ProcessChangeEventHeader
  *
  * @author sidd0610
  */
 
-public class ProcessChangeEventHeader implements AutoCloseable {
+public class ProcessChangeEventHeader {
 
     protected static final Logger logger = LoggerFactory.getLogger(ProcessChangeEventHeader.class.getClass());
 
-    protected SubscribeStream subscriber;
+    protected Subscribe subscriber;
     private ExampleConfigurations subscriberParams;
 
     private static final String SUBSCRIBER_TOPIC = "/data/OpportunityChangeEvent";
@@ -43,7 +43,7 @@ public class ProcessChangeEventHeader implements AutoCloseable {
     public ProcessChangeEventHeader(ExampleConfigurations requiredParams) {
         logger.info("Setting Up Subscriber");
         this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
-        this.subscriber = new SubscribeStream(subscriberParams, getProcessChangeEventHeaderResponseObserver());
+        this.subscriber = new Subscribe(subscriberParams, getProcessChangeEventHeaderResponseObserver());
     }
 
     private StreamObserver<FetchResponse> getProcessChangeEventHeaderResponseObserver() {
@@ -96,18 +96,15 @@ public class ProcessChangeEventHeader implements AutoCloseable {
         subscriber.close();
     }
 
-    @Override
-    public void close() {
-        logger.info("Bye Bye!");
-    }
-
     public static void main(String[] args) throws IOException {
         ExampleConfigurations requiredParameters = new ExampleConfigurations("arguments.yaml");
-        try (ProcessChangeEventHeader processChangeEventHeaderExample = new ProcessChangeEventHeader(requiredParameters)) {
+        try {
+            ProcessChangeEventHeader processChangeEventHeaderExample = new ProcessChangeEventHeader(requiredParameters);
             processChangeEventHeaderExample.startApp();
             processChangeEventHeaderExample.stopApp();
         } catch (Exception e) {
-
+            printStatusRuntimeException("Error while processing Change events", e);
+            System.exit(1);
         }
     }
 }

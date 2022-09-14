@@ -3,6 +3,7 @@ package utility;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import org.yaml.snakeyaml.Yaml;
@@ -35,6 +36,7 @@ public class ExampleConfigurations {
         this(null, null, null, null, null, null, null, null, 5, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
+
         Yaml yaml = new Yaml();
         InputStream inputStream = new FileInputStream("src/main/resources/"+filename);
         HashMap<String, Object> obj = yaml.load(inputStream);
@@ -53,7 +55,7 @@ public class ExampleConfigurations {
         this.numberOfEventsToPublish = obj.get("NUMBER_OF_EVENTS_TO_PUBLISH") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_PUBLISH").toString());
         this.numberOfEventsToSubscribe = obj.get("NUMBER_OF_EVENTS_TO_SUBSCRIBE") == null ?
-                Integer.MAX_VALUE : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_SUBSCRIBE").toString());
+                100 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_SUBSCRIBE").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
         this.providedLoginUrl = obj.get("USE_PROVIDED_LOGIN_URL") != null && Boolean.parseBoolean(obj.get("USE_PROVIDED_LOGIN_URL").toString());
 
@@ -62,6 +64,8 @@ public class ExampleConfigurations {
                 this.replayPreset = ReplayPreset.EARLIEST;
             } else if (obj.get("REPLAY_PRESET").toString().equals("CUSTOM")) {
                 this.replayPreset = ReplayPreset.CUSTOM;
+                System.out.println("BTE:"+ByteString.copyFrom(obj.get("REPLAY_ID").toString(), "utf-8"));
+                this.replayId = ByteString.copyFrom(obj.get("REPLAY_ID").toString(), Charset.defaultCharset());
             } else {
                 this.replayPreset = ReplayPreset.LATEST;
             }

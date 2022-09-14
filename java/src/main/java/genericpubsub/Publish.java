@@ -20,15 +20,15 @@ import utility.ExampleConfigurations;
  * Pub/Sub API's Publish RPC to publish events.
  *
  * Example:
- * ./run.sh genericpubsub.PublishUnary
+ * ./run.sh genericpubsub.Publish
  *
  * @author sidd0610
  */
-public class PublishUnary extends CommonContext {
+public class Publish extends CommonContext {
 
     private Schema schema;
 
-    public PublishUnary(ExampleConfigurations exampleConfigurations) {
+    public Publish(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
         setupTopicDetails(exampleConfigurations.getTopic(), true, true);
         schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
@@ -56,7 +56,7 @@ public class PublishUnary extends CommonContext {
 
     /**
      * Helper function to generate the PublishRequest with the generated ProducerEvent to be sent
-     * using the PublishUnary RPC
+     * using the Publish RPC
      *
      * @return PublishRequest
      * @throws IOException
@@ -67,7 +67,7 @@ public class PublishUnary extends CommonContext {
     }
 
     /**
-     * Helper function to publish the event using the Unary RPC
+     * Helper function to publish the event using Publish RPC
      */
     public ByteString publish() throws Exception {
         PublishResponse response = blockingStub.publish(generatePublishRequest());
@@ -75,7 +75,7 @@ public class PublishUnary extends CommonContext {
     }
 
     /**
-     * Helper function for other examples to publish the event using the Unary RPC
+     * Helper function for other examples to publish the event using Publish RPC
      *
      * @param event
      * @return
@@ -109,7 +109,7 @@ public class PublishUnary extends CommonContext {
                 logger.error("[ERROR] Error during Publish, event failed with: {}", result.getError().getMsg());
             } else {
                 lastPublishedReplayId = result.getReplayId();
-                logger.info("PublishUnary Call RPC ID: " + response.getRpcId());
+                logger.info("Publish Call RPC ID: " + response.getRpcId());
                 logger.info("Successfully published an event at " + busTopicName + " for tenant " + tenantGuid);
             }
         }
@@ -133,11 +133,10 @@ public class PublishUnary extends CommonContext {
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (PublishUnary example = new PublishUnary(exampleConfigurations)) {
+        try (Publish example = new Publish(exampleConfigurations)) {
             example.publish();
         } catch (Exception e) {
             CommonContext.printStatusRuntimeException("Publishing events", e);
-            System.exit(1);
         }
     }
 }

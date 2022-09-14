@@ -56,8 +56,9 @@ public class PublishStream extends CommonContext {
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
         final List<Status> errorStatuses = Lists.newArrayList();
         final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numEventsToPublish);
+        AtomicInteger failed = new AtomicInteger(0);
         StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(errorStatuses, finishLatchRef,
-                numEventsToPublish, publishResponses);
+                numEventsToPublish, publishResponses, failed);
 
         // construct the stream
         requestObserver = (ClientCallStreamObserver<PublishRequest>) asyncStub.publishStream(pubObserver);
@@ -67,7 +68,7 @@ public class PublishStream extends CommonContext {
         }
 
         ByteString lastPublishedReplayId = validatePublishResponse(errorStatuses, finishLatch, numEventsToPublish,
-                publishResponses);
+                publishResponses, failed);
         requestObserver.onCompleted();
         return lastPublishedReplayId;
     }
@@ -83,7 +84,7 @@ public class PublishStream extends CommonContext {
      * @throws Exception
      */
     private ByteString validatePublishResponse(List<Status> errorStatus, CountDownLatch finishLatch,
-                                               int expectedResponseCount, List<PublishResponse> publishResponses) throws Exception {
+                                               int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
         String exceptionMsg;
         final long LATEST = -1;
         ByteString lastPublishedReplayId = getReplayIdFromLong(LATEST);
@@ -102,22 +103,6 @@ public class PublishStream extends CommonContext {
             errorStatus.stream().forEach(status -> {
                 logger.error("[ERROR] unexpected error status: " + status);
             });
-        }
-
-        AtomicInteger failed = new AtomicInteger(0);
-        for (PublishResponse publishResponse : publishResponses) {
-            List<PublishResult> errorList = publishResponse.getResultsList().stream().filter(PublishResult::hasError).collect(Collectors.toList());
-            if (errorList.size() > 0) {
-                logger.error("[ERROR] publishing some event(s) in batch failed with rpcId: " + publishResponse.getRpcId());
-                for (PublishResult publishResult : errorList) {
-                    failed.incrementAndGet();
-                    logger.error("[ERROR] publishing event failed with: " + publishResult.getError().getMsg());
-                }
-            }
-            else {
-                logger.info("PublishStream Call rpcId: " + publishResponse.getRpcId());
-                lastPublishedReplayId = publishResponse.getResultsList().get(0).getReplayId();
-            }
         }
 
         if (failed.get() == 0 && receivedAllResponses) {
@@ -177,11 +162,24 @@ public class PublishStream extends CommonContext {
      */
     private StreamObserver<PublishResponse> getDefaultPublishStreamObserver(List<Status> errorStatus,
                                                                             AtomicReference<CountDownLatch> finishLatchRef, int expectedResponseCount,
-                                                                            List<PublishResponse> publishResponses) {
+                                                                            List<PublishResponse> publishResponses, AtomicInteger failed) {
         return new StreamObserver<>() {
             @Override
-            public void onNext(PublishResponse pr) {
-                publishResponses.add(pr);
+            public void onNext(PublishResponse publishResponse) {
+                publishResponses.add(publishResponse);
+
+                List<PublishResult> errorList = publishResponse.getResultsList().stream().filter(PublishResult::hasError).collect(Collectors.toList());
+                if (errorList.size() > 0) {
+                    logger.error("[ERROR] publishing some event(s) in batch failed with rpcId: " + publishResponse.getRpcId());
+                    for (PublishResult publishResult : errorList) {
+                        failed.incrementAndGet();
+                        logger.error("[ERROR] publishing event failed with: " + publishResult.getError().getMsg());
+                    }
+                }
+                else {
+                    logger.info("Event publish successful with rpcId: " + publishResponse.getRpcId());
+                }
+
                 if (publishResponses.size() == expectedResponseCount) {
                     finishLatchRef.get().countDown();
                 }
@@ -217,7 +215,6 @@ public class PublishStream extends CommonContext {
             }
         } catch (Exception e) {
             printStatusRuntimeException("Publishing events", e);
-            System.exit(1);
         }
     }
 }

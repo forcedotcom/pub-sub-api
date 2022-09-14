@@ -13,8 +13,8 @@ import com.salesforce.eventbus.protobuf.ConsumerEvent;
 import com.salesforce.eventbus.protobuf.FetchResponse;
 import com.salesforce.eventbus.protobuf.PublishResponse;
 
-import genericpubsub.PublishUnary;
-import genericpubsub.SubscribeStream;
+import genericpubsub.Publish;
+import genericpubsub.Subscribe;
 import io.grpc.stub.StreamObserver;
 import utility.CommonContext;
 import utility.ExampleConfigurations;
@@ -31,12 +31,12 @@ import utility.ExampleConfigurations;
  * @since v1.0
  */
 
-public class AccountListener implements AutoCloseable {
+public class AccountListener {
 
     protected static final Logger logger = LoggerFactory.getLogger(AccountListener.class.getClass());
 
-    protected SubscribeStream subscriber;
-    protected PublishUnary publisher;
+    protected Subscribe subscriber;
+    protected Publish publisher;
 
     private static final String SUBSCRIBER_TOPIC = "/data/AccountChangeEvent";
     private static final String PUBLISHER_TOPIC = "/event/NewAccount__e";
@@ -44,10 +44,10 @@ public class AccountListener implements AutoCloseable {
     public AccountListener(ExampleConfigurations requiredParams) {
         logger.info("Setting up the Subscriber");
         ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
-        this.subscriber = new SubscribeStream(subscriberParams, getAccountListenerResponseObserver());
+        this.subscriber = new Subscribe(subscriberParams, getAccountListenerResponseObserver());
         logger.info("Setting up the Publisher");
         ExampleConfigurations publisherParams = setupPublisherParameters(requiredParams, PUBLISHER_TOPIC);
-        this.publisher = new PublishUnary(publisherParams);
+        this.publisher = new Publish(publisherParams);
     }
 
     /**
@@ -103,15 +103,11 @@ public class AccountListener implements AutoCloseable {
         publisher.close();
     }
 
-    @Override
-    public void close() {
-        logger.info("Bye Bye!");
-    }
-
     public static void main(String[] args) throws IOException {
         // For this example specifying only the required configurations in the arguments.yaml is enough.
         ExampleConfigurations requiredParameters = new ExampleConfigurations("arguments.yaml");
-        try (AccountListener ac = new AccountListener(requiredParameters)) {
+        try {
+            AccountListener ac = new AccountListener(requiredParameters);
             ac.startApp();
             ac.stopApp();
         } catch (Exception e) {

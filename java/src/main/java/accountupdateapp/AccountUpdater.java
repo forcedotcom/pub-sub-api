@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.salesforce.eventbus.protobuf.ConsumerEvent;
 import com.salesforce.eventbus.protobuf.FetchResponse;
 
-import genericpubsub.SubscribeStream;
+import genericpubsub.Subscribe;
 import io.grpc.stub.StreamObserver;
 import utility.CommonContext;
 import utility.ExampleConfigurations;
@@ -29,11 +29,11 @@ import utility.ExampleConfigurations;
  * @author sidd0610
  */
 
-public class AccountUpdater implements AutoCloseable {
+public class AccountUpdater {
 
     protected static final Logger logger = LoggerFactory.getLogger(AccountUpdater.class.getClass());
 
-    protected SubscribeStream subscriber;
+    protected Subscribe subscriber;
     private ExampleConfigurations subscriberParams;
 
     private static final String SUBSCRIBER_TOPIC = "/event/NewAccount__e";
@@ -41,7 +41,7 @@ public class AccountUpdater implements AutoCloseable {
     public AccountUpdater(ExampleConfigurations requiredParams) {
         logger.info("Setting Up Subscriber");
         this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
-        this.subscriber = new SubscribeStream(subscriberParams, getAccountUpdaterResponseObserver());
+        this.subscriber = new Subscribe(subscriberParams, getAccountUpdaterResponseObserver());
     }
 
     /**
@@ -84,20 +84,15 @@ public class AccountUpdater implements AutoCloseable {
         subscriber.waitForEvents();
     }
 
-    // Helper function to stop the app.
     public void stopApp() {
         subscriber.close();
-    }
-
-    @Override
-    public void close() {
-        logger.info("Bye Bye!");
     }
 
     public static void main(String[] args) throws IOException {
         // For this example specifying only the required configurations in the arguments.yaml is enough.
         ExampleConfigurations requiredParameters = new ExampleConfigurations("arguments.yaml");
-        try (AccountUpdater ac = new AccountUpdater(requiredParameters)) {
+        try {
+            AccountUpdater ac = new AccountUpdater(requiredParameters);
             ac.startApp();
             ac.stopApp();
         } catch (Exception e) {
