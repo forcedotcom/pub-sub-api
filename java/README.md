@@ -42,7 +42,6 @@ In the `src/main` directory of the project, you will find several sub-directorie
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
        * `NUMBER_OF_EVENTS_TO_SUBSCRIBE`: Specify the number of events to subscribe while using the Subscribe RPC.
-       * `USE_PLAINTEXT_CHANNEL`: Specify whether a plaintext channel has to be used.
        * `USE_PROVIDED_LOGIN_URL`: The LOGIN_URL required parameter is usually translated into a specific my domain URL for connecting to the Salesforce org. In case the supplied LOGIN_URL has to be used, set this configuration to `true`.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
 2. After setting up the configurations, any example can be executed using the `./run.sh` file available at the parent directory.
