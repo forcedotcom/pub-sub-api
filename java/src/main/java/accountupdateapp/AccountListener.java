@@ -1,17 +1,18 @@
 package accountupdateapp;
 
 import static accountupdateapp.AccountUpdateAppUtil.*;
+import static java.lang.System.exit;
 import static utility.CommonContext.*;
 
 import java.io.IOException;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.salesforce.eventbus.protobuf.ConsumerEvent;
 import com.salesforce.eventbus.protobuf.FetchResponse;
-import com.salesforce.eventbus.protobuf.PublishResponse;
 
 import genericpubsub.Publish;
 import genericpubsub.Subscribe;
@@ -43,7 +44,7 @@ public class AccountListener {
 
     public AccountListener(ExampleConfigurations requiredParams) {
         logger.info("Setting up the Subscriber");
-        ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
+        ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 1);
         this.subscriber = new Subscribe(subscriberParams, getAccountListenerResponseObserver());
         logger.info("Setting up the Publisher");
         ExampleConfigurations publisherParams = setupPublisherParameters(requiredParams, PUBLISHER_TOPIC);
@@ -61,27 +62,28 @@ public class AccountListener {
             public void onNext(FetchResponse fetchResponse) {
                 for(ConsumerEvent ce: fetchResponse.getEventsList()) {
                     try {
-                        GenericRecord eventPayload = CommonContext.deserialize(subscriber.getSchema(), ce.getEvent().getPayload());
+                        Schema writerSchema = subscriber.getSchema(ce.getEvent().getSchemaId());
+                        GenericRecord eventPayload = CommonContext.deserialize(writerSchema, ce.getEvent().getPayload());
                         subscriber.updateReceivedEvents(1);
-                        for(String recordId : getRecordIdsOfAccountCDCEvent(eventPayload)) {
+                        for (String recordId : getRecordIdsOfAccountCDCEvent(eventPayload)) {
                             logger.info("New Account was Created");
-                            PublishResponse response = publisher.publish(createNewAccountProducerEvent(publisher.getSchema(), publisher.getSchemaInfo(), recordId));
-                        }
-                        if (subscriber.getReceivedEvents().get() < subscriber.getTotalEventsRequested()) {
-                            subscriber.fetchMore(subscriber.getBatchSize());
-                        } else {
-                            subscriber.receivedAllEvents.set(true);
+                            publisher.publish(createNewAccountProducerEvent(publisher.getSchema(), publisher.getSchemaInfo(), recordId));
                         }
                     } catch (Exception e) {
                         logger.info(e.toString());
                     }
-
+                }
+                if (subscriber.getReceivedEvents().get() < subscriber.getTotalEventsRequested()) {
+                    subscriber.fetchMore(subscriber.getBatchSize());
+                } else {
+                    subscriber.receivedAllEvents.set(true);
                 }
             }
 
             @Override
             public void onError(Throwable t) {
                 CommonContext.printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                exit(1);
             }
 
             @Override
@@ -111,7 +113,8 @@ public class AccountListener {
             ac.startApp();
             ac.stopApp();
         } catch (Exception e) {
-            logger.info(e.toString());
+            printStatusRuntimeException("Error during AccountListener", e);
+            exit(1);
         }
     }
 }

@@ -34,8 +34,6 @@ TOPIC: null
 NUMBER_OF_EVENTS_TO_PUBLISH: null
 # Number of Events to subscribe (default: 100)
 NUMBER_OF_EVENTS_TO_SUBSCRIBE: null
-# Use Provided Login Url (default: false)
-USE_PROVIDED_LOGIN_URL: null
 # ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})
 REPLAY_PRESET: null
 # Replay ID in ByteString

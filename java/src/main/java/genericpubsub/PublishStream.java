@@ -1,5 +1,7 @@
 package genericpubsub;
 
+import static java.lang.System.exit;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -189,6 +191,7 @@ public class PublishStream extends CommonContext {
             public void onError(Throwable throwable) {
                 errorStatus.add(Status.fromThrowable(throwable));
                 finishLatchRef.get().countDown();
+                exit(1);
             }
 
             @Override
@@ -198,23 +201,16 @@ public class PublishStream extends CommonContext {
         };
     }
 
-    public static void main(String[] args) {
-        try {
-            ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
-            PublishStream example = new PublishStream(exampleConfigurations);
+    public static void main(String[] args) throws IOException {
+        ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
 
-            // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
-            // order to close the resources used.
-            try (example) {
-                example.publishStream(exampleConfigurations.getNumberOfEventsToPublish());
-            } catch (Exception e) {
-                if (example.requestObserver != null) {
-                    example.requestObserver.onError(e);
-                }
-                throw e;
-            }
+        // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
+        // order to close the resources used.
+        try (PublishStream example = new PublishStream(exampleConfigurations)) {
+            example.publishStream(exampleConfigurations.getNumberOfEventsToPublish());
         } catch (Exception e) {
-            printStatusRuntimeException("Publishing events", e);
+            printStatusRuntimeException("Error During PublishStream", e);
+            exit(1);
         }
     }
 }

@@ -42,8 +42,11 @@ In the `src/main` directory of the project, you will find several sub-directorie
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
        * `NUMBER_OF_EVENTS_TO_SUBSCRIBE`: Specify the number of events to subscribe while using the Subscribe RPC.
-       * `USE_PROVIDED_LOGIN_URL`: The LOGIN_URL required parameter is usually translated into a specific my domain URL for connecting to the Salesforce org. In case the supplied LOGIN_URL has to be used, set this configuration to `true`.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
+         * If a subscription has to be started using the CUSTOM replay preset, the `REPLAY_ID` parameter is mandatory. 
+         * The `REPLAY_ID` has to be specified in the following format: `[<byte_values_separated_by_commas>]`. Please enter the values as is within the square brackets and without any quotes. 
+         * Example: `[0, 1, 2, 3, 4, -5, 6, 7, -8]`
+       
 2. After setting up the configurations, any example can be executed using the `./run.sh` file available at the parent directory.
    * Format for running the examples: `./run.sh <package_name>.<example_class_name>`
    * Example: `./run.sh genericpubsub.PublishStream`

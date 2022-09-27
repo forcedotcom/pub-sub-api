@@ -2,10 +2,12 @@ package accountupdateapp;
 
 
 import static accountupdateapp.AccountUpdateAppUtil.*;
+import static java.lang.System.exit;
 import static utility.CommonContext.*;
 
 import java.io.IOException;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,7 @@ public class AccountUpdater {
 
     public AccountUpdater(ExampleConfigurations requiredParams) {
         logger.info("Setting Up Subscriber");
-        this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
+        this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 1);
         this.subscriber = new Subscribe(subscriberParams, getAccountUpdaterResponseObserver());
     }
 
@@ -55,20 +57,26 @@ public class AccountUpdater {
             public void onNext(FetchResponse fetchResponse) {
                 for(ConsumerEvent ce: fetchResponse.getEventsList()) {
                     try {
-                        GenericRecord eventPayload = CommonContext.deserialize(subscriber.getSchema(), ce.getEvent().getPayload());
+                        Schema writerSchema = subscriber.getSchema(ce.getEvent().getSchemaId());
+                        GenericRecord eventPayload = CommonContext.deserialize(writerSchema, ce.getEvent().getPayload());
                         subscriber.updateReceivedEvents(1);
                         String accountRecordId = eventPayload.get("AccountRecordId__c").toString();
                         updateAccountRecord(subscriberParams, accountRecordId, subscriber.getSessionToken(), logger);
                     } catch (Exception e) {
                         logger.info(e.toString());
                     }
-
+                }
+                if (subscriber.getReceivedEvents().get() < subscriber.getTotalEventsRequested()) {
+                    subscriber.fetchMore(subscriber.getBatchSize());
+                } else {
+                    subscriber.receivedAllEvents.set(true);
                 }
             }
 
             @Override
             public void onError(Throwable t) {
                 CommonContext.printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                exit(1);
             }
 
             @Override
@@ -96,7 +104,8 @@ public class AccountUpdater {
             ac.startApp();
             ac.stopApp();
         } catch (Exception e) {
-
+            printStatusRuntimeException("Error during AccountUpdate", e);
+            exit(1);
         }
     }
 }

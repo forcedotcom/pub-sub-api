@@ -1,8 +1,11 @@
 package genericpubsub;
 
+import static java.lang.System.exit;
+
+import java.io.IOException;
+
 import org.apache.avro.Schema;
 
-import com.google.protobuf.Descriptors;
 import com.salesforce.eventbus.protobuf.SchemaInfo;
 import com.salesforce.eventbus.protobuf.SchemaRequest;
 import com.salesforce.eventbus.protobuf.TopicInfo;
@@ -32,7 +35,7 @@ public class GetSchema extends CommonContext {
         logger.info("GetTopic Call RPC ID: " + topicInfo.getRpcId());
 
         topicInfo.getAllFields().entrySet().forEach(entry -> {
-            System.out.println(entry.getKey() + " : " + entry.getValue());
+            logger.info(entry.getKey() + " : " + entry.getValue());
         });
 
         SchemaRequest schemaRequest = SchemaRequest.newBuilder().setSchemaId(topicInfo.getSchemaId()).build();
@@ -46,20 +49,16 @@ public class GetSchema extends CommonContext {
         logger.info("Schema of topic  " + topicName + ": " + schema.toString(true));
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
 
-        try {
-            final ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
-
-            // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
-            // order to close the resources used.
-            try (GetSchema example = new GetSchema(exampleConfigurations)) {
-                example.getSchema(exampleConfigurations.getTopic());
-            } catch (Exception e) {
-                CommonContext.printStatusRuntimeException("Getting schema", e);
-            }
+        // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
+        // order to close the resources used.
+        try (GetSchema example = new GetSchema(exampleConfigurations)) {
+            example.getSchema(exampleConfigurations.getTopic());
         } catch (Exception e) {
-            logger.error(e.toString());
+            CommonContext.printStatusRuntimeException("Getting schema", e);
+            exit(1);
         }
     }
 

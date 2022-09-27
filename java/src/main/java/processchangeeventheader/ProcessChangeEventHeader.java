@@ -1,11 +1,13 @@
 package processchangeeventheader;
 
+import static java.lang.System.exit;
 import static utility.CommonContext.*;
 import static utility.EventParser.getFieldListFromBitmap;
 
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ public class ProcessChangeEventHeader {
 
     public ProcessChangeEventHeader(ExampleConfigurations requiredParams) {
         logger.info("Setting Up Subscriber");
-        this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC);
+        this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 100);
         this.subscriber = new Subscribe(subscriberParams, getProcessChangeEventHeaderResponseObserver());
     }
 
@@ -52,10 +54,11 @@ public class ProcessChangeEventHeader {
             public void onNext(FetchResponse fetchResponse) {
                 for(ConsumerEvent ce: fetchResponse.getEventsList()) {
                     try {
-                        GenericRecord eventPayload = CommonContext.deserialize(subscriber.getSchema(), ce.getEvent().getPayload());
+                        Schema writerSchema = subscriber.getSchema(ce.getEvent().getSchemaId());
+                        GenericRecord eventPayload = CommonContext.deserialize(writerSchema, ce.getEvent().getPayload());
                         subscriber.updateReceivedEvents(1);
                         logger.info("Received event with Payload: " + eventPayload.toString());
-                        List<String> changedFields = getFieldListFromBitmap(subscriber.getSchema(), (GenericData.Record) eventPayload.get("ChangeEventHeader"), "changedFields");
+                        List<String> changedFields = getFieldListFromBitmap(writerSchema, (GenericData.Record) eventPayload.get("ChangeEventHeader"), "changedFields");
                         if (!changedFields.isEmpty()) {
                             logger.info("============================");
                             logger.info("       Changed Fields       ");
@@ -104,7 +107,7 @@ public class ProcessChangeEventHeader {
             processChangeEventHeaderExample.stopApp();
         } catch (Exception e) {
             printStatusRuntimeException("Error while processing Change events", e);
-            System.exit(1);
+            exit(1);
         }
     }
 }

@@ -1,7 +1,6 @@
 package utility;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -29,29 +28,6 @@ public class EventParser {
     public EventParser(Schema schema) {
         this.schema = schema;
         this.datumReader = new GenericDatumReader<GenericRecord>(schema);
-    }
-
-    /**
-     * Converts an array of byte into a long
-     *
-     * @param bytes
-     * @return parsed long
-     */
-    private static long bytesToLong(byte[] bytes) {
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.put(bytes);
-        buffer.flip();
-        return buffer.getLong();
-    }
-
-    private static List<String> parseStringList(Record record, String fieldName) {
-        List<String> values = new ArrayList<>();
-        @SuppressWarnings("unchecked")
-        Array<Utf8> utf8Values = (Array<Utf8>) record.get(fieldName);
-        for (Utf8 utf8Value : utf8Values) {
-            values.add(utf8Value.toString());
-        }
-        return values;
     }
 
     /**
@@ -110,8 +86,6 @@ public class EventParser {
                         List<String> fullFieldNames = new ArrayList<>();
                         fieldNamesFromBitmap(childSchema, bitmapMapStrings[1]).stream()
                                 .map(col -> parentFieldName + "." + col).forEach(fullFieldNames::add);
-                        for(String x: fullFieldNames)
-                            System.out.println(x);
                         if (fullFieldNames.size() > 0) {
                             itr.remove();
                             // when all nested fields under a compound got nulled out at once by customer,

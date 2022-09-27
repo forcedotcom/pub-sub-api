@@ -1,12 +1,17 @@
 package genericpubsub;
 
+import static java.lang.System.exit;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 
 import com.google.protobuf.ByteString;
 import com.salesforce.eventbus.protobuf.*;
@@ -31,6 +36,7 @@ public class Subscribe extends CommonContext {
     public static AtomicBoolean receivedAllEvents = new AtomicBoolean(false);
 
     private StreamObserver<FetchRequest> serverStream;
+    private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private AtomicInteger receivedEvents = new AtomicInteger(0);
     private int totalEventsRequested;
     private StreamObserver<FetchResponse> responseStreamObserver;
@@ -62,8 +68,7 @@ public class Subscribe extends CommonContext {
         this.totalEventsRequested = (numberOfEvents == null || numberOfEvents == 0) ? 100 : numberOfEvents;
         this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribe());
         this.responseStreamObserver = responseStreamObserver;
-        this.setupTopicDetails(exampleConfigurations.getTopic(), false, true);
-        schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
+        this.setupTopicDetails(exampleConfigurations.getTopic(), false, false);
         this.replayPreset = exampleConfigurations.getReplayPreset();
         this.customReplayId = exampleConfigurations.getReplayId();
     }
@@ -79,7 +84,7 @@ public class Subscribe extends CommonContext {
                 .setTopicName(this.busTopicName)
                 .setNumRequested(BATCH_SIZE);
         if (this.replayPreset == ReplayPreset.CUSTOM) {
-            fetchRequestBuilder.setReplayId(storedReplay);
+            fetchRequestBuilder.setReplayId(customReplayId);
         }
         serverStream.onNext(fetchRequestBuilder.build());
     }
@@ -97,7 +102,7 @@ public class Subscribe extends CommonContext {
                 logger.info("RPC ID: " + fetchResponse.getRpcId());
                 for(ConsumerEvent ce : fetchResponse.getEventsList()) {
                     try {
-                        logger.info(deserialize(schema, ce.getEvent().getPayload()).toString());
+                        processEvent(ce);
                     } catch (Exception e) {
                         logger.info(e.toString());
                     }
@@ -105,27 +110,44 @@ public class Subscribe extends CommonContext {
                 }
                 storedReplay = fetchResponse.getLatestReplayId();
 
-                // Implementing a basic flow control strategy where the next fetchRequest is sent only after the
-                // requested number of events in the previous fetchRequest(s) are received.
-                if (fetchResponse.getPendingNumRequested() == 0) {
-                    fetchMore(BATCH_SIZE);
-                }
                 if (receivedEvents.get() >= totalEventsRequested) {
                     receivedAllEvents.set(true);
+                }
+
+                // Implementing a basic flow control strategy where the next fetchRequest is sent only after the
+                // requested number of events in the previous fetchRequest(s) are received.
+                if (fetchResponse.getPendingNumRequested() == 0 && !receivedAllEvents.get()) {
+                    fetchMore(Math.min(BATCH_SIZE, totalEventsRequested-receivedEvents.get()));
                 }
             }
 
             @Override
             public void onError(Throwable t) {
                 printStatusRuntimeException("Error during Subscribe", (Exception) t);
+                exit(1);
                 // Retry logic should be added here if needed as this example does not demonstrate retries in case of failures.
             }
 
             @Override
             public void onCompleted() {
-                logger.info("Received requested number of events! Call completed by server.");
+                logger.info("Received requested number of " + totalEventsRequested + " events! Call completed by server.");
             }
         };
+    }
+
+    private void processEvent(ConsumerEvent ce) throws IOException {
+        Schema writerSchema = getSchema(ce.getEvent().getSchemaId());
+        this.storedReplay = ce.getReplayId();
+        GenericRecord record = deserialize(writerSchema, ce.getEvent().getPayload());
+        logger.info("Received event with payload: " + record.toString());
+    }
+
+    public Schema getSchema(String schemaId) {
+        return schemaCache.computeIfAbsent(schemaId, id -> {
+            SchemaRequest request = SchemaRequest.newBuilder().setSchemaId(id).build();
+            String schemaJson = blockingStub.getSchema(request).getSchemaJson();
+            return (new Schema.Parser()).parse(schemaJson);
+        });
     }
 
     /**
@@ -153,13 +175,13 @@ public class Subscribe extends CommonContext {
             final long elapsed = Duration.between(startTime, Instant.now()).getSeconds();
 
             if (elapsed > maxTimeout) {
-                logger.info("Exceeded timeout of " + maxTimeout + " while waiting for events. Received " + receivedEvents.get() + " events. Exiting");
+                logger.info("Exceeded timeout of " + maxTimeout + " while waiting for events. Received " + receivedEvents.get() + " events. Exiting.");
                 return;
             }
 
             logger.info("Subscription Active. Received " + receivedEvents.get() + " events.");
             if (receivedEvents.get() < totalEventsRequested) {
-                this.wait(10_000);
+                this.wait(5_000);
             }
         }
     }
@@ -192,10 +214,6 @@ public class Subscribe extends CommonContext {
         return BATCH_SIZE;
     }
 
-    public Schema getSchema() {
-        return schema;
-    }
-
     /**
      * Closes the connection when the task is complete.
      */
@@ -221,6 +239,7 @@ public class Subscribe extends CommonContext {
             subscribe.waitForEvents();
         } catch (Exception e) {
             CommonContext.printStatusRuntimeException("Error during Subscribe", e);
+            exit(1);
         }
     }
 }

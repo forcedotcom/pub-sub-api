@@ -1,5 +1,7 @@
 package genericpubsub;
 
+import static java.lang.System.exit;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -137,6 +139,7 @@ public class Publish extends CommonContext {
             example.publish();
         } catch (Exception e) {
             CommonContext.printStatusRuntimeException("Publishing events", e);
+            exit(1);
         }
     }
 }

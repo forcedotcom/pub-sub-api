@@ -3,7 +3,6 @@ package utility;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import org.yaml.snakeyaml.Yaml;
@@ -33,7 +32,9 @@ public class ExampleConfigurations {
     private ByteString replayId;
 
     public ExampleConfigurations() {
-        this(null, null, null, null, null, null, null, null, 5, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
+        this(null, null, null, null, null,
+                null, null, null, 5, Integer.MAX_VALUE,
+                false, false, ReplayPreset.LATEST, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
 
@@ -64,8 +65,7 @@ public class ExampleConfigurations {
                 this.replayPreset = ReplayPreset.EARLIEST;
             } else if (obj.get("REPLAY_PRESET").toString().equals("CUSTOM")) {
                 this.replayPreset = ReplayPreset.CUSTOM;
-                System.out.println("BTE:"+ByteString.copyFrom(obj.get("REPLAY_ID").toString(), "utf-8"));
-                this.replayId = ByteString.copyFrom(obj.get("REPLAY_ID").toString(), Charset.defaultCharset());
+                this.replayId = getByteStringFromReplayIdInputString(obj.get("REPLAY_ID").toString());
             } else {
                 this.replayPreset = ReplayPreset.LATEST;
             }
@@ -77,12 +77,14 @@ public class ExampleConfigurations {
 
     public ExampleConfigurations(String username, String password, String loginUrl,
                                  String pubsubHost, int pubsubPort, String topic) {
-        this(username, password, loginUrl, null, null, pubsubHost, pubsubPort,
-                topic, 5, Integer.MAX_VALUE,
-                false, false, ReplayPreset.LATEST, null);
+        this(username, password, loginUrl, null, null, pubsubHost, pubsubPort, topic,
+                5, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
     }
 
-    public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken, String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish, Integer numberOfEventsToSubscribe, Boolean plaintextChannel, Boolean providedLoginUrl, ReplayPreset replayPreset, ByteString replayId) {
+    public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
+                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,
+                                 Integer numberOfEventsToSubscribe, Boolean plaintextChannel, Boolean providedLoginUrl,
+                                 ReplayPreset replayPreset, ByteString replayId) {
         this.username = username;
         this.password = password;
         this.loginUrl = loginUrl;
@@ -209,5 +211,19 @@ public class ExampleConfigurations {
 
     public void setReplayId(ByteString replayId) {
         this.replayId = replayId;
+    }
+
+    public ByteString getByteStringFromReplayIdInputString(String input) {
+        ByteString replayId;
+        String[] values = input.substring(1, input.length()-2).split(",");
+        byte[] b = new byte[values.length];
+        int i=0;
+        for (String x : values) {
+            if (x.strip().length() != 0) {
+                b[i++] = (byte)Integer.parseInt(x.strip());
+            }
+        }
+        replayId = ByteString.copyFrom(b);
+        return replayId;
     }
 }

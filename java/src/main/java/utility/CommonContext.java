@@ -41,6 +41,7 @@ public class CommonContext implements AutoCloseable {
 
     protected String tenantGuid;
     protected String busTopicName;
+    protected TopicInfo topicInfo;
     protected SchemaInfo schemaInfo;
     protected String sessionToken;
 
@@ -123,7 +124,7 @@ public class CommonContext implements AutoCloseable {
     protected void setupTopicDetails(final String topicName, final boolean pubOrSubMode, final boolean fetchSchema) {
         if (topicName != null && !topicName.isEmpty()) {
             try {
-                TopicInfo topicInfo = blockingStub.getTopic(TopicRequest.newBuilder().setTopicName(topicName).build());
+                topicInfo = blockingStub.getTopic(TopicRequest.newBuilder().setTopicName(topicName).build());
                 tenantGuid = topicInfo.getTenantGuid();
                 busTopicName = topicInfo.getTopicName();
 
@@ -239,11 +240,15 @@ public class CommonContext implements AutoCloseable {
      * @param topic
      * @return
      */
-    public static ExampleConfigurations setupSubscriberParameters(ExampleConfigurations requiredParams, String topic) {
+    public static ExampleConfigurations setupSubscriberParameters(ExampleConfigurations requiredParams, String topic, int numberOfEvents) {
         ExampleConfigurations subParams = new ExampleConfigurations();
         setCommonParameters(subParams, requiredParams);
         subParams.setTopic(topic);
         subParams.setReplayPreset(requiredParams.getReplayPreset());
+        if (requiredParams.getReplayPreset() == ReplayPreset.CUSTOM) {
+            subParams.setReplayId(requiredParams.getReplayId());
+        }
+        subParams.setNumberOfEventsToSubscribe(numberOfEvents);
         return subParams;
     }
 

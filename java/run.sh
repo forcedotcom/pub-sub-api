@@ -2,12 +2,7 @@
 #
 # A convenience script that runs examples based on locally built JARs. Usage:
 #   mvn clean package
-#   ./run.sh Publish -u <username> -p <pwd> -l <loginurl>
-#   optional parameters:
-#   -grpcHost <host>: defaults to localhost
-#   -grpcPort <port number>: defaults to 7011
-#   -t <topic>: defaults to /event/CarMaintenance__e
-#   -n <number of events to publish>: defaults to 5 and used only in genericpubsub.PublishStream example
+#   ./run.sh <package-name><class-name>
 #
 
 EXAMPLE=$1

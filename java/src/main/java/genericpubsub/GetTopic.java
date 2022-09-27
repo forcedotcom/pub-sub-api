@@ -1,5 +1,9 @@
 package genericpubsub;
 
+import static java.lang.System.exit;
+
+import java.io.IOException;
+
 import org.apache.avro.Schema;
 
 import com.salesforce.eventbus.protobuf.SchemaInfo;
@@ -34,21 +38,16 @@ public class GetTopic extends CommonContext {
         });
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
 
-        try {
-            final ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
-
-            // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
-            // order to close the resources used.
-            try (GetTopic example = new GetTopic(exampleConfigurations)) {
-                example.getTopic(exampleConfigurations.getTopic());
-            } catch (Exception e) {
-                CommonContext.printStatusRuntimeException("Error while Getting Topic", e);
-                System.exit(1);
-            }
+        // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
+        // order to close the resources used.
+        try (GetTopic example = new GetTopic(exampleConfigurations)) {
+            example.getTopic(exampleConfigurations.getTopic());
         } catch (Exception e) {
-            logger.error(e.toString());
+            CommonContext.printStatusRuntimeException("Error while Getting Topic", e);
+            exit(1);
         }
     }
 }

@@ -37,4 +37,3 @@ This example subscribes to change events corresponding to the creation of [Accou
 ## Notes:
 * Subscribers in both the `AccountUpdater` and `AccountListener` subscribe with the ReplayPreset set to LATEST. Therefore, only events generated once the examples have started running will be processed
 * The `AccountUpdater` logs the `AccountNumber` that has been added to the `Account` record which can be used to verify if the update is correct.
-* 
