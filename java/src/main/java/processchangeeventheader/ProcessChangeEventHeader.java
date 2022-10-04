@@ -1,6 +1,5 @@
 package processchangeeventheader;
 
-import static java.lang.System.exit;
 import static utility.CommonContext.*;
 import static utility.EventParser.getFieldListFromBitmap;
 
@@ -78,12 +77,14 @@ public class ProcessChangeEventHeader {
 
             @Override
             public void onError(Throwable t) {
-                CommonContext.printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                subscriber.isActive.set(false);
             }
 
             @Override
             public void onCompleted() {
                 logger.info("Received requested number of events! Call completed by server.");
+                subscriber.isActive.set(false);
             }
         };
     }
@@ -107,7 +108,6 @@ public class ProcessChangeEventHeader {
             processChangeEventHeaderExample.stopApp();
         } catch (Exception e) {
             printStatusRuntimeException("Error while processing Change events", e);
-            exit(1);
         }
     }
 }

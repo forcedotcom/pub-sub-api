@@ -100,15 +100,21 @@ public class CommonContext implements AutoCloseable {
                 return sessionTokenService.loginWithAccessToken(options.getLoginUrl(),
                         options.getAccessToken(), options.getTenantId());
             } catch (Exception e) {
+                close();
                 throw new IllegalArgumentException("cannot log in with access token", e);
             }
-        } else {
+        } else if (options.getUsername() != null && options.getPassword() != null) {
             try {
                 return sessionTokenService.login(options.getLoginUrl(),
                         options.getUsername(), options.getPassword(), options.useProvidedLoginUrl());
             } catch (Exception e) {
+                close();
                 throw new IllegalArgumentException("cannot log in with username/password", e);
             }
+        } else {
+            logger.warn("Please use either username/password or session token for authentication");
+            close();
+            return null;
         }
     }
 

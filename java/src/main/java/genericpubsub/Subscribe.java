@@ -1,7 +1,5 @@
 package genericpubsub;
 
-import static java.lang.System.exit;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,13 +32,13 @@ public class Subscribe extends CommonContext {
 
     public static int BATCH_SIZE;
     public static AtomicBoolean receivedAllEvents = new AtomicBoolean(false);
+    public static AtomicBoolean isActive = new AtomicBoolean(false);
 
     private StreamObserver<FetchRequest> serverStream;
     private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private AtomicInteger receivedEvents = new AtomicInteger(0);
     private int totalEventsRequested;
     private StreamObserver<FetchResponse> responseStreamObserver;
-    private Schema schema;
     private ReplayPreset replayPreset;
     private ByteString customReplayId;
     private ByteString storedReplay;
@@ -64,6 +62,7 @@ public class Subscribe extends CommonContext {
      */
     public void subscribeConstructorHelper(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
         receivedAllEvents.set(false);
+        isActive.set(true);
         Integer numberOfEvents = exampleConfigurations.getNumberOfEventsToSubscribe();
         this.totalEventsRequested = (numberOfEvents == null || numberOfEvents == 0) ? 100 : numberOfEvents;
         this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribe());
@@ -124,13 +123,14 @@ public class Subscribe extends CommonContext {
             @Override
             public void onError(Throwable t) {
                 printStatusRuntimeException("Error during Subscribe", (Exception) t);
-                exit(1);
+                isActive.set(false);
                 // Retry logic should be added here if needed as this example does not demonstrate retries in case of failures.
             }
 
             @Override
             public void onCompleted() {
                 logger.info("Received requested number of " + totalEventsRequested + " events! Call completed by server.");
+                isActive.set(false);
             }
         };
     }
@@ -171,7 +171,7 @@ public class Subscribe extends CommonContext {
      */
     public synchronized void waitForEventsWithMaxTimeout(int maxTimeout) throws InterruptedException {
         final Instant startTime = Instant.now();
-        while(!receivedAllEvents.get()) {
+        while(!receivedAllEvents.get() && isActive.get()) {
             final long elapsed = Duration.between(startTime, Instant.now()).getSeconds();
 
             if (elapsed > maxTimeout) {
@@ -238,8 +238,7 @@ public class Subscribe extends CommonContext {
             subscribe.startSubscription();
             subscribe.waitForEvents();
         } catch (Exception e) {
-            CommonContext.printStatusRuntimeException("Error during Subscribe", e);
-            exit(1);
+            printStatusRuntimeException("Error during Subscribe", e);
         }
     }
 }

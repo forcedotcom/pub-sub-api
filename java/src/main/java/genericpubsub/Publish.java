@@ -1,7 +1,5 @@
 package genericpubsub;
 
-import static java.lang.System.exit;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -108,11 +106,13 @@ public class Publish extends CommonContext {
             PublishResult result = resultList.get(0);
             if (result.hasError()) {
                 logger.error("[ERROR] Publishing batch failed with rpcId: " + response.getRpcId());
-                logger.error("[ERROR] Error during Publish, event failed with: {}", result.getError().getMsg());
+                logger.error("[ERROR] Error during Publish, event with correlationKey: {} failed with: {}",
+                        response.getResults(0).getCorrelationKey(), result.getError().getMsg());
             } else {
                 lastPublishedReplayId = result.getReplayId();
                 logger.info("Publish Call RPC ID: " + response.getRpcId());
-                logger.info("Successfully published an event at " + busTopicName + " for tenant " + tenantGuid);
+                logger.info("Successfully published an event with correlationKey: {} at {} for tenant {}.",
+                        response.getResults(0).getCorrelationKey(), busTopicName, tenantGuid);
             }
         }
 
@@ -139,7 +139,6 @@ public class Publish extends CommonContext {
             example.publish();
         } catch (Exception e) {
             CommonContext.printStatusRuntimeException("Publishing events", e);
-            exit(1);
         }
     }
 }

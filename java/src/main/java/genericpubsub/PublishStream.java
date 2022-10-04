@@ -1,7 +1,5 @@
 package genericpubsub;
 
-import static java.lang.System.exit;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -9,7 +7,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -98,19 +95,16 @@ public class PublishStream extends CommonContext {
         boolean receivedAllResponses = true;
         if (expectedResponseCount != publishResponses.size()) {
             receivedAllResponses = false;
-            exceptionMsg = "[ERROR] publishStream received: " + publishResponses.size() + " events instead of expected "
+            exceptionMsg = "[ERROR] PublishStream received: " + publishResponses.size() + " events instead of expected "
                     + expectedResponseCount;
             logger.error(exceptionMsg);
 
             errorStatus.stream().forEach(status -> {
-                logger.error("[ERROR] unexpected error status: " + status);
+                logger.error("[ERROR] Unexpected error status: " + status);
             });
         }
 
-        if (failed.get() == 0 && receivedAllResponses) {
-            logger.info("Successfully published " + expectedResponseCount + " events at " + busTopicName + " for tenant "
-                    + tenantGuid);
-        } else {
+        if (failed.get() != 0 || !receivedAllResponses) {
             exceptionMsg = "[ERROR] Failed to publish all events. " + failed + " failed out of "
                     + expectedResponseCount;
             logger.error(exceptionMsg);
@@ -170,16 +164,16 @@ public class PublishStream extends CommonContext {
             public void onNext(PublishResponse publishResponse) {
                 publishResponses.add(publishResponse);
 
-                List<PublishResult> errorList = publishResponse.getResultsList().stream().filter(PublishResult::hasError).collect(Collectors.toList());
-                if (errorList.size() > 0) {
-                    logger.error("[ERROR] publishing some event(s) in batch failed with rpcId: " + publishResponse.getRpcId());
-                    for (PublishResult publishResult : errorList) {
+                logger.info("Publish Call rpcId: " + publishResponse.getRpcId());
+
+                for (PublishResult publishResult : publishResponse.getResultsList()) {
+                    if (publishResult.hasError()) {
                         failed.incrementAndGet();
-                        logger.error("[ERROR] publishing event failed with: " + publishResult.getError().getMsg());
+                        logger.error("[ERROR] Publishing event having correlationKey: " + publishResult.getCorrelationKey() +
+                                " failed with error: " + publishResult.getError().getMsg());
+                    } else {
+                        logger.info("Event publish successful with correlationKey: " + publishResult.getCorrelationKey());
                     }
-                }
-                else {
-                    logger.info("Event publish successful with rpcId: " + publishResponse.getRpcId());
                 }
 
                 if (publishResponses.size() == expectedResponseCount) {
@@ -188,14 +182,15 @@ public class PublishStream extends CommonContext {
             }
 
             @Override
-            public void onError(Throwable throwable) {
-                errorStatus.add(Status.fromThrowable(throwable));
+            public void onError(Throwable t) {
+                printStatusRuntimeException("Error during PublishStream", (Exception) t);
+                errorStatus.add(Status.fromThrowable(t));
                 finishLatchRef.get().countDown();
-                exit(1);
             }
 
             @Override
             public void onCompleted() {
+                logger.info("Successfully published " + expectedResponseCount + " events at " + busTopicName + " for tenant " + tenantGuid);
                 finishLatchRef.get().countDown();
             }
         };
@@ -210,7 +205,6 @@ public class PublishStream extends CommonContext {
             example.publishStream(exampleConfigurations.getNumberOfEventsToPublish());
         } catch (Exception e) {
             printStatusRuntimeException("Error During PublishStream", e);
-            exit(1);
         }
     }
 }

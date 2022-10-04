@@ -1,7 +1,6 @@
 package accountupdateapp;
 
 import static accountupdateapp.AccountUpdateAppUtil.*;
-import static java.lang.System.exit;
 import static utility.CommonContext.*;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ public class AccountListener {
 
     public AccountListener(ExampleConfigurations requiredParams) {
         logger.info("Setting up the Subscriber");
-        ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 1);
+        ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 100);
         this.subscriber = new Subscribe(subscriberParams, getAccountListenerResponseObserver());
         logger.info("Setting up the Publisher");
         ExampleConfigurations publisherParams = setupPublisherParameters(requiredParams, PUBLISHER_TOPIC);
@@ -82,13 +81,14 @@ public class AccountListener {
 
             @Override
             public void onError(Throwable t) {
-                CommonContext.printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
-                exit(1);
+                printStatusRuntimeException("Error during SubscribeStream", (Exception) t);
+                subscriber.isActive.set(false);
             }
 
             @Override
             public void onCompleted() {
                 logger.info("Received requested number of events! Call completed by server.");
+                subscriber.isActive.set(false);
             }
         };
     }
@@ -114,7 +114,6 @@ public class AccountListener {
             ac.stopApp();
         } catch (Exception e) {
             printStatusRuntimeException("Error during AccountListener", e);
-            exit(1);
         }
     }
 }

@@ -1,13 +1,7 @@
 package genericpubsub;
 
-import static java.lang.System.exit;
-
 import java.io.IOException;
 
-import org.apache.avro.Schema;
-
-import com.salesforce.eventbus.protobuf.SchemaInfo;
-import com.salesforce.eventbus.protobuf.SchemaRequest;
 import com.salesforce.eventbus.protobuf.TopicInfo;
 import com.salesforce.eventbus.protobuf.TopicRequest;
 
@@ -46,8 +40,7 @@ public class GetTopic extends CommonContext {
         try (GetTopic example = new GetTopic(exampleConfigurations)) {
             example.getTopic(exampleConfigurations.getTopic());
         } catch (Exception e) {
-            CommonContext.printStatusRuntimeException("Error while Getting Topic", e);
-            exit(1);
+            printStatusRuntimeException("Error while Getting Topic", e);
         }
     }
 }

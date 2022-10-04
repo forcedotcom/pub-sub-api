@@ -213,6 +213,11 @@ public class ExampleConfigurations {
         this.replayId = replayId;
     }
 
+    /**
+     * NOTE: replayIds are meant to be opaque (See docs: https://developer.salesforce.com/docs/platform/pub-sub-api/guide/intro.html)
+     * and this is used for example purposes only. A long-lived subscription client will use the stored replay to
+     * resubscribe on failure. The stored replay should be in bytes and not in any other form.
+     */
     public ByteString getByteStringFromReplayIdInputString(String input) {
         ByteString replayId;
         String[] values = input.substring(1, input.length()-2).split(",");

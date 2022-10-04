@@ -1,7 +1,5 @@
 package genericpubsub;
 
-import static java.lang.System.exit;
-
 import java.io.IOException;
 
 import org.apache.avro.Schema;
@@ -57,8 +55,7 @@ public class GetSchema extends CommonContext {
         try (GetSchema example = new GetSchema(exampleConfigurations)) {
             example.getSchema(exampleConfigurations.getTopic());
         } catch (Exception e) {
-            CommonContext.printStatusRuntimeException("Getting schema", e);
-            exit(1);
+            printStatusRuntimeException("Getting schema", e);
         }
     }
 
