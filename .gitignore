@@ -13,3 +13,5 @@ $RECYCLE.BIN/
 
 # Dependency directory for Go examples
 go/vendor/
+
+*/target/

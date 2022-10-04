@@ -1,0 +1,40 @@
+# 'arguments.yaml' contains the required and optional configurations for running the examples.
+#
+# Note: Please ensure to specify a value of `null` to all optional configurations when
+# you do not wish to specify a value for the same. Some optional configurations will be
+# initialised with default values specified below.
+
+# =========================
+# Required Configurations:
+# =========================
+# Pub/Sub API Endpoint
+PUBSUB_HOST: api.pubsub.salesforce.com
+# Pub/Sub API Host
+PUBSUB_PORT: 7443
+# Your Salesforce Login URL
+LOGIN_URL: null
+
+# For authentication, you can use either username/password or accessToken/tenantId types.
+# Either one of the combinations is required. Please specify `null` values to the unused type.
+# Your Salesforce Username
+USERNAME: null
+# Your Salesforce Password
+PASSWORD: null
+# Your Salesforce org Tenant ID
+TENANT_ID: null
+# Your Salesforce Session Token
+ACCESS_TOKEN: null
+
+# =========================
+# Optional configurations:
+# =========================
+# Topic to publish/subscribe to (default: /event/CarMaintenance__e)
+TOPIC: null
+# Number of Events to publish (default: 5)
+NUMBER_OF_EVENTS_TO_PUBLISH: null
+# Number of Events to subscribe (default: 100)
+NUMBER_OF_EVENTS_TO_SUBSCRIBE: null
+# ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})
+REPLAY_PRESET: null
+# Replay ID in ByteString
+REPLAY_ID: null
