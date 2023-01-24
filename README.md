@@ -23,12 +23,12 @@ officially supported languages have well-supported Avro libraries:
 |C++|[Apache Avro C++](https://avro.apache.org/docs/current/api/cpp/html/index.html)|
 |Dart|[avro-dart](https://github.com/sqs/avro-dart) (last updated 2012)|
 |Go|[goavro](https://github.com/linkedin/goavro)|
-|Java|[Apache Avro Java](https://avro.apache.org/docs/1.10.2/gettingstartedjava.html)|
+|Java|[Apache Avro Java](https://avro.apache.org/docs/current/getting-started-java/)|
 |Kotlin|[avro4k](https://github.com/avro-kotlin/avro4k)|
 |Node|[avro-js](https://www.npmjs.com/package/avro-js)|
 |Objective C|[ObjectiveAvro](https://github.com/jlawton/ObjectiveAvro) (but read [this](https://stackoverflow.com/questions/57216446/data-serialisation-in-objective-c-avro-alternative))|
 |PHP|[avro-php](https://github.com/wikimedia/avro-php)|
-|Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
+|Python|[Apache Avro Python](https://avro.apache.org/docs/current/getting-started-python/)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
 
 ## Documentation, Blog Post and Videos
