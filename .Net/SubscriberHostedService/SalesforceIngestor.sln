@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{62D96142-D0BA-494D-A28D-5405EECB98B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SalesforceIngestor.App", "src\SalesforceIngestor.App\SalesforceIngestor.App.csproj", "{B18033C5-C930-4244-929E-72E8511CEE85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SalesforceIngestor.SalesforceAuthentication", "src\SalesforceIngestor.SalesforceAuthentication\SalesforceIngestor.SalesforceAuthentication.csproj", "{A85DA731-195B-457C-B7B0-569FE8EEB30C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B18033C5-C930-4244-929E-72E8511CEE85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B18033C5-C930-4244-929E-72E8511CEE85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B18033C5-C930-4244-929E-72E8511CEE85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B18033C5-C930-4244-929E-72E8511CEE85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A85DA731-195B-457C-B7B0-569FE8EEB30C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85DA731-195B-457C-B7B0-569FE8EEB30C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85DA731-195B-457C-B7B0-569FE8EEB30C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85DA731-195B-457C-B7B0-569FE8EEB30C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {18E845E2-A811-4FFD-B245-874851BA2465}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B18033C5-C930-4244-929E-72E8511CEE85} = {62D96142-D0BA-494D-A28D-5405EECB98B3}
+		{A85DA731-195B-457C-B7B0-569FE8EEB30C} = {62D96142-D0BA-494D-A28D-5405EECB98B3}
+	EndGlobalSection
+EndGlobal

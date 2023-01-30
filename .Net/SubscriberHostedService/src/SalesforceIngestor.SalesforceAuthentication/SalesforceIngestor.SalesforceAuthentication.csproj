@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" Version="11.4.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />      
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+      <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.25.1" />
+    </ItemGroup>
+
+</Project>
