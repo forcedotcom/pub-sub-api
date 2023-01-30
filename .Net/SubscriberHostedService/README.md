@@ -1,20 +1,43 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+This is a hosted service designed for handling multiple subscriptions to events for Salesforce via the Pub/Sub API.  It is meant to be long-running and contains some components for resiliency via Polly.
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+# Operation
+Then application manages subscriptions to 1 or more Salesforce Topics.  The gPRC interactions are managed via .Net's gRPC client factory.  The application provides resiliency via Polly and the application is meant to provide stable, long-lived connection to Salesforce Topics for data synchronization.  The application has a library for managing access tokens with Salesforce and a simple service for handling replay id storeage to the file system.  All messages received via th response stream are put on a .Net channel and are handled by another background service for further processing.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+# Getting it running
+Assuming this will be run against a test org, there are two config vals that need to be specified.  The topics that need to be subscribed to the parameters necessary for authentication need to be set.  This app assumes they will be set in `appsettings.json` or in `secrets.json`(recommended) as they can be set without changing code in the repository.  The code assumes the usage of certificates for authentication to Salesforce.  Refer to the `SalesforceIngestor.SalesforceAuthentication` project for more details.  The application uses the user secret `sf-ingestor-poc`.  The secret can be initialized and values for authentication can be set within secrets.json file.  With the below set the library will manage getting/caching tokens for Salesforce.  By default tokens will be cached for 1hr.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Authentication
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+```
+{
+    "salesforceAuthenticationSettings": {
+        "privateKeyIsPasswordProtected": false,
+        "privateKeyIsBase64Encoded": false,
+        "privateKey": "<put private key here.  best to base64 encode.  If it is base 64 encoded make sure privateKeyIsBase64Encoded is true>",
+        "privateKeyPassword": "<put private key password here.  If the PK is base 64 encoded then make sure privateKeyIsPasswordProtected is true>",
+        "clientId": "<The client id for the connected app in Salesforce>",        
+        "userName": "<The salesforce user to login as>"        
+      }
+}
+```
+
+*Storing the private key for certificate authentication in the appsettings.json file should be avoided.  If certificate auth/assertion is not used for authentication then  a different implementation could also be provided that works with username/password as opposed to certificate.*
+
+## Topics
+
+Application can manage connections to more than 1 subscription at a time.  To specify which topics to subscribe to add the following to either the `secrets.json`(recommended) or the appsettings.json file.  The config value is an array and each entry will be suscribed to.  
+
+```
+{
+    "subscriptions": {
+        "topics": ["/event/<put the Salesforce schema name here>"]        
+    }
+}
+
+```
+
+*This sample was specifically tested with Platform Events.  CDC should work as well, but hasn't been explicitly tested.#
+
+Salesforce OAuth 2.0 JWT Bearer Flow: https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5
+
