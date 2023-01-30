@@ -37,7 +37,7 @@ Application can manage connections to more than 1 subscription at a time.  To sp
 
 ```
 
-*This sample was specifically tested with Platform Events.  CDC should work as well, but hasn't been explicitly tested.#
+*This sample was specifically tested with Platform Events.  CDC should work as well, but hasn't been explicitly tested.*
 
 Salesforce OAuth 2.0 JWT Bearer Flow: https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_jwt_flow.htm&type=5
 
