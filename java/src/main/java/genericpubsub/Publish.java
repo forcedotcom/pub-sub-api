@@ -95,8 +95,7 @@ public class Publish extends CommonContext {
      * @return
      */
     private ByteString validatePublishResponse(PublishResponse response) {
-        final long LATEST = -1;
-        ByteString lastPublishedReplayId = getReplayIdFromLong(LATEST);
+        ByteString lastPublishedReplayId = null;
         List<PublishResult> resultList = response.getResultsList();
         if (resultList.size() != 1) {
             String errorMsg = "[ERROR] Error during Publish, received: " + resultList.size() + " events instead of expected 1";

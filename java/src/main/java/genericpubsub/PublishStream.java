@@ -38,6 +38,8 @@ public class PublishStream extends CommonContext {
 
     ClientCallStreamObserver<PublishRequest> requestObserver = null;
 
+    private ByteString lastPublishedReplayId;
+
     public PublishStream(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
         setupTopicDetails(exampleConfigurations.getTopic(), true, true);
@@ -50,7 +52,7 @@ public class PublishStream extends CommonContext {
      * @return ByteString
      * @throws Exception
      */
-    public ByteString publishStream(int numEventsToPublish) throws Exception {
+    public void publishStream(int numEventsToPublish) throws Exception {
         CountDownLatch finishLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
         final List<Status> errorStatuses = Lists.newArrayList();
@@ -66,10 +68,9 @@ public class PublishStream extends CommonContext {
             requestObserver.onNext(generatePublishRequest(i));
         }
 
-        ByteString lastPublishedReplayId = validatePublishResponse(errorStatuses, finishLatch, numEventsToPublish,
+        validatePublishResponse(errorStatuses, finishLatch, numEventsToPublish,
                 publishResponses, failed);
         requestObserver.onCompleted();
-        return lastPublishedReplayId;
     }
 
     /**
@@ -82,11 +83,9 @@ public class PublishStream extends CommonContext {
      * @return
      * @throws Exception
      */
-    private ByteString validatePublishResponse(List<Status> errorStatus, CountDownLatch finishLatch,
-                                               int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
+    private void validatePublishResponse(List<Status> errorStatus, CountDownLatch finishLatch,
+                                         int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
         String exceptionMsg;
-        final long LATEST = -1;
-        ByteString lastPublishedReplayId = getReplayIdFromLong(LATEST);
         if (!finishLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             exceptionMsg = "[ERROR] publishStream timed out after: " + TIMEOUT_SECONDS + "sec";
             logger.error(exceptionMsg);
@@ -110,8 +109,6 @@ public class PublishStream extends CommonContext {
             logger.error(exceptionMsg);
             throw new Exception(exceptionMsg);
         }
-
-        return lastPublishedReplayId;
     }
 
     /**
@@ -173,6 +170,7 @@ public class PublishStream extends CommonContext {
                                 " failed with error: " + publishResult.getError().getMsg());
                     } else {
                         logger.info("Event publish successful with correlationKey: " + publishResult.getCorrelationKey());
+                        lastPublishedReplayId = publishResult.getReplayId();
                     }
                 }
 
