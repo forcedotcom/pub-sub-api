@@ -92,7 +92,6 @@ public class ProcessChangeEventHeader {
     // Helper function to start the app.
     public void startApp() throws InterruptedException {
         subscriber.startSubscription();
-        subscriber.waitForEvents();
     }
 
     // Helper function to stop the app.

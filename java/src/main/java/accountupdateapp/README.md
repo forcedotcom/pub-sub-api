@@ -9,7 +9,7 @@ This example subscribes to change events corresponding to the creation of [Accou
     * Search for the `Account` object and click on the right arrow in the middle of the screen to select the entity.
     * Click on the `Save` button to update the changes.
 2. The `NewAccount` custom platform needs to be created with the following fields:
-    - Standard Fields
+    - Platform Event Name
         - Label: `NewAccount`
         - Plural Label: `NewAccounts`
     - Custom Fields
@@ -35,5 +35,11 @@ This example subscribes to change events corresponding to the creation of [Accou
 ```
 
 ## Notes:
-* Subscribers in both the `AccountUpdater` and `AccountListener` subscribe with the ReplayPreset set to LATEST. Therefore, only events generated once the examples have started running will be processed
+* Please use the `my domain` URL for your org for running these examples. You can find the my domain URL through Developer Console.
+  * Open Developer Console
+  * Click on the Debug menu and select Open Execute Anonymous Window.
+  * Key in the following in the window: `System.debug(System.url.getOrgDomainUrl());` and execute the same.
+  * Once done, in the Logs tab below open the logs recently executed code. 
+  * In the logs, get the `my domain` URL from the USER_DEBUG event.  
+* Subscribers in both the `AccountUpdater` and `AccountListener` subscribe with the ReplayPreset set to LATEST. Therefore, only events generated once the examples have started running will be processed.
 * The `AccountUpdater` logs the `AccountNumber` that has been added to the `Account` record which can be used to verify if the update is correct.

@@ -65,10 +65,8 @@ public class AccountUpdater {
                         logger.info(e.toString());
                     }
                 }
-                if (subscriber.getReceivedEvents().get() < subscriber.getTotalEventsRequested()) {
+                if (fetchResponse.getPendingNumRequested() == 0) {
                     subscriber.fetchMore(subscriber.getBatchSize());
-                } else {
-                    subscriber.receivedAllEvents.set(true);
                 }
             }
 
@@ -89,7 +87,6 @@ public class AccountUpdater {
     // Helper function to start the app.
     public void startApp() throws InterruptedException {
         subscriber.startSubscription();
-        subscriber.waitForEvents();
     }
 
     public void stopApp() {
