@@ -18,11 +18,11 @@ This example subscribes to change events corresponding to the creation of [Accou
 
 ## Flow Overview:
 * User creates an `Account` standard object which triggers an `AccountChangeEvent` event.
-  * When the user creates an `Account` object, this generates a change event on the /data/AccountChangeEvent topic.
+* When the user creates an `Account` object, this generates a change event on the /data/AccountChangeEvent topic.
 * A listener listens to this `AccountChangeEvent` event and publishes a `NewAccount` custom platform event
-  * The listener subscribes to the events on the `/data/AccountChangeEvent` topic and only in the case when a new `Account` is created, it will publish an event on the `/event/NewAccount__e` custom platform event topic with the recordId of the created `Account` object. 
+* The listener subscribes to the events on the `/data/AccountChangeEvent` topic and only in the case when a new `Account` is created, it will publish an event on the `/event/NewAccount__e` custom platform event topic with the recordId of the created `Account` object. 
 * The updater listens to this `NewAccount` event and updates the `Account` object with a randomly generated `AccountNumber`.
-  * The updater subscribes to the `/event/NewAccount__e` topic and when an event is received, it will update the appropriate `Account` object with a randomly generated `AccountNumber` using the Salesforce REST API.  
+* The updater subscribes to the `/event/NewAccount__e` topic and when an event is received, it will update the appropriate `Account` object with a randomly generated `AccountNumber` using the Salesforce REST API.  
 
 ## Running the examples:
 1. Run the `AccountUpdater` first by running the following command:
