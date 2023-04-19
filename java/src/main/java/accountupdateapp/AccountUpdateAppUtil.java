@@ -126,6 +126,7 @@ public class AccountUpdateAppUtil {
 
         if (res > 299) {
             logger.info("Unable to update Account Record.");
+            logger.info(response.getContentAsString());
         } else {
             logger.info("Successfully updated Account Record. Updated AccountNumber: " + accountNumber);
         }
