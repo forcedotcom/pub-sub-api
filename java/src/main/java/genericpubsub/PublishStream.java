@@ -84,7 +84,7 @@ public class PublishStream extends CommonContext {
      * @throws Exception
      */
     private void validatePublishResponse(List<Status> errorStatus, CountDownLatch finishLatch,
-                                         int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
+                                               int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
         String exceptionMsg;
         if (!finishLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             exceptionMsg = "[ERROR] publishStream timed out after: " + TIMEOUT_SECONDS + "sec";

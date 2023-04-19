@@ -158,6 +158,20 @@ public class CommonContext implements AutoCloseable {
     }
 
     /**
+     * Helper function to convert the replayId in long to ByteString type.
+     *
+     * @param replayValue value of the replayId in long
+     * @return ByteString value of the replayId
+     */
+    public static ByteString getReplayIdFromLong(long replayValue) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(replayValue);
+        buffer.flip();
+
+        return ByteString.copyFrom(buffer);
+    }
+
+    /**
      * Helper function to create an event of the CarMaintenance topic.
      *
      * @param schema schema of the topic
@@ -236,10 +250,7 @@ public class CommonContext implements AutoCloseable {
         ExampleConfigurations subParams = new ExampleConfigurations();
         setCommonParameters(subParams, requiredParams);
         subParams.setTopic(topic);
-        subParams.setReplayPreset(requiredParams.getReplayPreset());
-        if (requiredParams.getReplayPreset() == ReplayPreset.CUSTOM) {
-            subParams.setReplayId(requiredParams.getReplayId());
-        }
+        subParams.setReplayPreset(ReplayPreset.LATEST);
         subParams.setNumberOfEventsToSubscribe(numberOfEvents);
         return subParams;
     }
