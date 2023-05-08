@@ -22,8 +22,6 @@ import time
 from PubSub import PubSub
 from utils.ClientUtil import command_line_input
 
-latest_replay_id = None
-
 
 def process_confirmation(event, pubsub):
     """
@@ -38,13 +36,13 @@ def process_confirmation(event, pubsub):
 
     if event.events:
         print("Number of events received in FetchResponse: ", len(event.events))
-        # If all requested evetns are delivered, release the semaphore
+        # If all requested events are delivered, release the semaphore
         # so that a new FetchRequest gets sent by `PubSub.fetch_req_stream()`.
         if event.pending_num_requested == 0:
-            pubsub.semaphore.release()
+            pubsub.release_subscription_semaphore()
 
         for evt in event.events:
-            # Get the event payload and shema, then decode the payload
+            # Get the event payload and schema, then decode the payload
             payload_bytes = evt.event.payload
             json_schema = pubsub.get_schema_json(evt.event.schema_id)
             decoded_event = pubsub.decode(json_schema, payload_bytes)
@@ -73,7 +71,8 @@ def process_confirmation(event, pubsub):
         print("[", time.strftime('%b %d, %Y %l:%M%p %Z'), "] The subscription is active.")
 
     # The replay_id is used to resubscribe after this position in the stream if the client disconnects.
-    latest_replay_id = event.latest_replay_id
+    # Implement storage of replay for resubscribe!!!
+    event.latest_replay_id
 
 def run(argument_dict):
     sfdc_updater = PubSub(argument_dict)

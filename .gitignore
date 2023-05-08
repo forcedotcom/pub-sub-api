@@ -15,3 +15,7 @@ $RECYCLE.BIN/
 go/vendor/
 
 */target/
+
+# Python compiled files
+*.pyo
+*.pyc
