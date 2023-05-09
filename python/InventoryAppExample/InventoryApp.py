@@ -23,7 +23,6 @@ import time
 from util.ChangeEventHeaderUtility import process_bitmap
 
 my_publish_topic = '/event/NewOrderConfirmation__e'
-latest_replay_id = None
 
 
 def make_publish_request(schema_id, record_id, obj):
@@ -71,7 +70,7 @@ def process_order(event, pubsub):
         # If all requested events are delivered, release the semaphore
         # so that a new FetchRequest gets sent by `PubSub.fetch_req_stream()`.
         if event.pending_num_requested == 0:
-            pubsub.semaphore.release()
+            pubsub.release_subscription_semaphore()
 
         for evt in event.events:
             payload_bytes = evt.event.payload
@@ -126,7 +125,8 @@ def process_order(event, pubsub):
         print("[", time.strftime('%b %d, %Y %l:%M%p %Z'), "] The subscription is active.")
 
     # The replay_id is used to resubscribe after this position in the stream if the client disconnects.
-    latest_replay_id = event.latest_replay_id
+    # Implement storage of replay for resubscribe!!!
+    event.latest_replay_id
 
 
 def run(argument_dict):
