@@ -32,8 +32,8 @@ ACCESS_TOKEN: null
 TOPIC: null
 # Number of Events to publish (default: 5)
 NUMBER_OF_EVENTS_TO_PUBLISH: null
-# Number of Events to subscribe (default: 100)
-NUMBER_OF_EVENTS_TO_SUBSCRIBE: null
+# Number of Events to subscribe (default: 5)
+NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 # ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})
 REPLAY_PRESET: null
 # Replay ID in ByteString

@@ -251,7 +251,7 @@ public class CommonContext implements AutoCloseable {
         setCommonParameters(subParams, requiredParams);
         subParams.setTopic(topic);
         subParams.setReplayPreset(ReplayPreset.LATEST);
-        subParams.setNumberOfEventsToSubscribe(numberOfEvents);
+        subParams.setNumberOfEventsToSubscribeInEachFetchRequest(numberOfEvents);
         return subParams;
     }
 

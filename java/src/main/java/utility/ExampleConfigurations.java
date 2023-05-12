@@ -25,7 +25,7 @@ public class ExampleConfigurations {
     private Integer pubsubPort;
     private String topic;
     private Integer numberOfEventsToPublish;
-    private Integer numberOfEventsToSubscribe;
+    private Integer numberOfEventsToSubscribeInEachFetchRequest;
     private Boolean plaintextChannel;
     private Boolean providedLoginUrl;
     private ReplayPreset replayPreset;
@@ -33,7 +33,7 @@ public class ExampleConfigurations {
 
     public ExampleConfigurations() {
         this(null, null, null, null, null,
-                null, null, null, 5, Integer.MAX_VALUE,
+                null, null, null, 5, 5,
                 false, false, ReplayPreset.LATEST, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
@@ -55,8 +55,8 @@ public class ExampleConfigurations {
         this.accessToken = obj.get("ACCESS_TOKEN") == null ? null : obj.get("ACCESS_TOKEN").toString();
         this.numberOfEventsToPublish = obj.get("NUMBER_OF_EVENTS_TO_PUBLISH") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_PUBLISH").toString());
-        this.numberOfEventsToSubscribe = obj.get("NUMBER_OF_EVENTS_TO_SUBSCRIBE") == null ?
-                100 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_SUBSCRIBE").toString());
+        this.numberOfEventsToSubscribeInEachFetchRequest = obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST") == null ?
+                5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
         this.providedLoginUrl = obj.get("USE_PROVIDED_LOGIN_URL") != null && Boolean.parseBoolean(obj.get("USE_PROVIDED_LOGIN_URL").toString());
 
@@ -83,7 +83,7 @@ public class ExampleConfigurations {
 
     public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
                                  String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,
-                                 Integer numberOfEventsToSubscribe, Boolean plaintextChannel, Boolean providedLoginUrl,
+                                 Integer numberOfEventsToSubscribeInEachFetchRequest, Boolean plaintextChannel, Boolean providedLoginUrl,
                                  ReplayPreset replayPreset, ByteString replayId) {
         this.username = username;
         this.password = password;
@@ -94,7 +94,7 @@ public class ExampleConfigurations {
         this.pubsubPort = pubsubPort;
         this.topic = topic;
         this.numberOfEventsToPublish = numberOfEventsToPublish;
-        this.numberOfEventsToSubscribe = numberOfEventsToSubscribe;
+        this.numberOfEventsToSubscribeInEachFetchRequest = numberOfEventsToSubscribeInEachFetchRequest;
         this.plaintextChannel = plaintextChannel;
         this.providedLoginUrl = providedLoginUrl;
         this.replayPreset = replayPreset;
@@ -165,12 +165,12 @@ public class ExampleConfigurations {
         this.numberOfEventsToPublish = numberOfEventsToPublish;
     }
 
-    public int getNumberOfEventsToSubscribe() {
-        return numberOfEventsToSubscribe;
+    public int getNumberOfEventsToSubscribeInEachFetchRequest() {
+        return numberOfEventsToSubscribeInEachFetchRequest;
     }
 
-    public void setNumberOfEventsToSubscribe(int numberOfEventsToSubscribe) {
-        this.numberOfEventsToSubscribe = numberOfEventsToSubscribe;
+    public void setNumberOfEventsToSubscribeInEachFetchRequest(int numberOfEventsToSubscribeInEachFetchRequest) {
+        this.numberOfEventsToSubscribeInEachFetchRequest = numberOfEventsToSubscribeInEachFetchRequest;
     }
 
     public boolean usePlaintextChannel() {
