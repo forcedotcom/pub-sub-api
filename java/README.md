@@ -1,7 +1,7 @@
 # Pub/Sub API Java Examples
 
 ## Overview
-This directory contains some simple Java Examples that can be used with the Pub/Sub API. These examples range from generic Publish and Subscribe, processing CustomEventHeaders in change events and also a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
+This directory contains some Java examples that can be used with the Pub/Sub API. These examples range from generic Publish and Subscribe, processing CustomEventHeaders in change events and also a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
 
 ## Project Structure
 In the `src/main` directory of the project, you will find several sub-directories as follows:
@@ -41,10 +41,10 @@ In the `src/main` directory of the project, you will find several sub-directorie
    2. Optional Parameters:
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
-       * `NUMBER_OF_EVENTS_TO_SUBSCRIBE`: Specify the number of events to subscribe while using the Subscribe RPC.
+       * `NUMBER_OF_EVENTS_IN_FETCHREQUEST`: Specify the number of events that the Subscribe RPC requests from the server in each FetchRequest. The example fetches at most 5 events in each Subscribe request. If you pass in more than 5, it sends multiple Subscribe requests with at most 5 events requested in FetchRequest each. For more information about requesting events, see [Pull Subscription and Flow Control](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html) in the Pub/Sub API documentation.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
          * If a subscription has to be started using the CUSTOM replay preset, the `REPLAY_ID` parameter is mandatory. 
-         * The `REPLAY_ID` has to be specified in the following format: `[<byte_values_separated_by_commas>]`. Please enter the values as is within the square brackets and without any quotes. 
+         * The `REPLAY_ID` is a byte array and must be specified in this format: `[<byte_values_separated_by_commas>]`. Please enter the values as is within the square brackets and without any quotes. 
          * Example: `[0, 1, 2, 3, 4, -5, 6, 7, -8]`
        
 2. After setting up the configurations, any example can be executed using the `./run.sh` file available at the parent directory.
@@ -53,7 +53,9 @@ In the `src/main` directory of the project, you will find several sub-directorie
 
 ## Implementation
 - This repo can be used as a reference point for clients looking to create a Java app to integrate with Pub/Sub API. Note that the project structure and the examples included in this repo are intended for demo purposes only and clients are free to implement their own Java apps in any way they see fit.
-- The Subscribe RPC examples demonstrates a basic flow control strategy where a new `fetchRequest` is sent only after the requested number of events in the previous `fetchRequest(s)` are received. Custom flow control strategies can be implemented as needed. More info on flow control available [here](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html).
+- The Generic Subscribe RPC example creates a long-lived subscription. After all requested events are received, it sends a new `FetchRequest` to keep the subscription alive and the client listening to new events.
+- The Generic Subscribe RPC example demonstrates a basic flow control strategy where a new `FetchRequest` is sent only after the requested number of events in the previous `FetchRequest(s)` are received. Custom flow control strategies can be implemented as needed. More info on flow control available [here](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html).
+- The Generic Subscribe RPC example demonstrates error handling. After an exception occurs, it attempts to resubscribe after the last received event by implementing Binary Exponential Backoff. The example processes events and sends the retry requests asynchronously. If the error is an invalid replay ID,  it tries to resubscribe since the earliest stored event in the event bus. See the `onError()` method in `Subscribe.java`.
 
 # Limitations
 1. No guarantees that streams will remain open with `PublishStream` examples - Pub/Sub API has idle timeouts and will close idle streams. If a stream is closed while running these examples, you will most likely need to stop and restart.

@@ -54,7 +54,7 @@ public class Subscribe extends CommonContext {
         super(exampleConfigurations);
         isActive.set(true);
         this.exampleConfigurations = exampleConfigurations;
-        this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribe());
+        this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
         this.responseStreamObserver = getDefaultResponseStreamObserver();
         this.setupTopicDetails(exampleConfigurations.getTopic(), false, false);
         this.replayPreset = exampleConfigurations.getReplayPreset();
@@ -67,7 +67,7 @@ public class Subscribe extends CommonContext {
         super(exampleConfigurations);
         isActive.set(true);
         this.exampleConfigurations = exampleConfigurations;
-        this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribe());
+        this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
         this.responseStreamObserver = responseStreamObserver;
         this.setupTopicDetails(exampleConfigurations.getTopic(), false, false);
         this.replayPreset = exampleConfigurations.getReplayPreset();
