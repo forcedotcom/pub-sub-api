@@ -23,12 +23,12 @@ officially supported languages have well-supported Avro libraries:
 |C++|[Apache Avro C++](https://avro.apache.org/docs/current/api/cpp/html/index.html)|
 |Dart|[avro-dart](https://github.com/sqs/avro-dart) (last updated 2012)|
 |Go|[goavro](https://github.com/linkedin/goavro)|
-|Java|[Apache Avro Java](https://avro.apache.org/docs/1.10.2/gettingstartedjava.html)|
+|Java|[Apache Avro Java](https://avro.apache.org/docs/current/getting-started-java/)|
 |Kotlin|[avro4k](https://github.com/avro-kotlin/avro4k)|
 |Node|[avro-js](https://www.npmjs.com/package/avro-js)|
 |Objective C|[ObjectiveAvro](https://github.com/jlawton/ObjectiveAvro) (but read [this](https://stackoverflow.com/questions/57216446/data-serialisation-in-objective-c-avro-alternative))|
 |PHP|[avro-php](https://github.com/wikimedia/avro-php)|
-|Python|[Apache Avro Python](https://avro.apache.org/docs/current/gettingstartedpython.html)|
+|Python|[Apache Avro Python](https://avro.apache.org/docs/current/getting-started-python/)|
 |Ruby|[AvroTurf](https://github.com/dasch/avro_turf)|
 
 ## Documentation, Blog Post and Videos
@@ -36,11 +36,15 @@ officially supported languages have well-supported Avro libraries:
 - [Salesforce Architects Blog Post](https://medium.com/salesforce-architects/announcing-pub-sub-api-generally-available-3980c9eaf0b7)
 - [Introducing the New gRPC-based Pub Sub API YouTube Developer Quick Takes](https://youtu.be/g9P87_loVVA)
 
-## Code Samples
+## Salesforce Support Code Samples
+- [Java Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-java-quick-start.html)
 - [Python Quick Start in the Developer Guide](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/qs-python-quick-start.html)
 - [Python Code Examples](python/)
 - [Go Code Examples](go/)
 - [Java Code Examples](java/)
+
+## Community Created Code Samples
+These examples are not offiically supported by Salesforce. Please use with your own discretion.
 - [E-Bikes Sample Application](https://github.com/trailheadapps/ebikes-lwc)
 - [Pub/Sub API Node Client](https://github.com/pozil/pub-sub-api-node-client)
-  
+- [.Net Code Examples](https://github.com/Meyce/pub-sub-api/tree/main/.Net)
