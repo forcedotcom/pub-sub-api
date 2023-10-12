@@ -49,3 +49,5 @@ These examples are developed by the community. They aren't supported by Salesfor
 - [E-Bikes Sample Application](https://github.com/trailheadapps/ebikes-lwc)
 - [Pub/Sub API Node Client](https://github.com/pozil/pub-sub-api-node-client)
 - [.NET Code Examples](https://github.com/Meyce/pub-sub-api/tree/main/.Net)
+
+If you have a code sample for Pub/Sub API that you would like to add a link to in this section, submit a PR with the modified readme page. We don't guarantee that we can link to all samples. Priority will be given to samples implemented in a programming language that is not represented in this repository's samples.
