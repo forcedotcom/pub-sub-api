@@ -3,6 +3,7 @@ module github.com/developerforce/pub-sub-api/go
 go 1.18
 
 require (
+	github.com/boljen/go-bitmap v0.0.0-20151001105940-23cd2fb0ce7d
 	github.com/linkedin/goavro/v2 v2.11.0
 	google.golang.org/grpc v1.37.0
 	google.golang.org/protobuf v1.26.0
