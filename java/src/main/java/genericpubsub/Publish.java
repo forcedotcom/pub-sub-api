@@ -16,7 +16,7 @@ import utility.CommonContext;
 import utility.ExampleConfigurations;
 
 /**
- * A single-topic publisher that creates an Order_Event event and publishes it. This example uses
+ * A single-topic publisher that creates an Order Event event and publishes it. This example uses
  * Pub/Sub API's Publish RPC to publish events.
  *
  * Example:

@@ -32,11 +32,11 @@ ACCESS_TOKEN: null
 TOPIC: null
 # Number of Events to publish in single or separate batches (default: 5)
 # Used only by Publish.java and PublishStream.java
-NUMBER_OF_EVENTS_TO_PUBLISH: 3
+NUMBER_OF_EVENTS_TO_PUBLISH: null
 # Indicates whether to add events to a single batch in one PublishRequest (true) or
-# to separate batches in different PublishRequests (false) (default: false)
+# to separate batches in different PublishRequests (default: false)
 # Used only by PublishStream.java
-SINGLE_BATCH: true
+SINGLE_BATCH: null
 # Number of Events to subscribe (default: 5)
 NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 # ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})

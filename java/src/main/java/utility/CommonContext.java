@@ -176,14 +176,14 @@ public class CommonContext implements AutoCloseable {
 
     /**
      * Helper function to create an event.
-     * Currently generates event message for the Order_Event topic. Modify accordingly for a topic of your choice.
+     * Currently generates event message for the topic "Order Event". Modify accordingly for a topic of your choice.
      *
      * @param schema schema of the topic
      * @return
      */
     public GenericRecord createEventMessage(Schema schema) {
         // Please remember to use the appropriate orgId for the CreatedById field.
-        return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
+        return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
                 .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1")
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
@@ -191,7 +191,7 @@ public class CommonContext implements AutoCloseable {
     /**
      * Helper function to create an event with a counter appended to
      * the end of a Text field. Used while publishing multiple events.
-     * Currently generates event message for the Order_Event topic. Modify accordingly for a topic of your choice.
+     * Currently generates event message for the topic "Order Event". Modify accordingly for a topic of your choice.
      *
      * @param schema schema of the topic
      * @param counter counter to be appended towards the end of any Text Field
@@ -199,7 +199,7 @@ public class CommonContext implements AutoCloseable {
      */
     public GenericRecord createEventMessage(Schema schema, final int counter) {
         // Please remember to use the appropriate orgId for the CreatedById field.
-        return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
+        return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
                 .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1" + counter)
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
