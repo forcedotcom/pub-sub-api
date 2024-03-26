@@ -16,7 +16,7 @@ import utility.CommonContext;
 import utility.ExampleConfigurations;
 
 /**
- * A single-topic publisher that creates a CarMaintenance event and publishes it. This example uses
+ * A single-topic publisher that creates an Order_Event event and publishes it. This example uses
  * Pub/Sub API's Publish RPC to publish events.
  *
  * Example:
@@ -42,7 +42,7 @@ public class Publish extends CommonContext {
      */
     private ProducerEvent generateProducerEvent() throws IOException {
         Schema schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
-        GenericRecord event = createCarMaintenanceRecord(schema);
+        GenericRecord event = createEventMessage(schema);
 
         // Convert to byte array
         GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(event.getSchema());

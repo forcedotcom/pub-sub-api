@@ -2,6 +2,9 @@ package utility;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -172,31 +175,49 @@ public class CommonContext implements AutoCloseable {
     }
 
     /**
-     * Helper function to create an event of the CarMaintenance topic.
+     * Helper function to create an event.
+     * Currently generates event message for the Order_Event topic. Modify accordingly for a topic of your choice.
      *
      * @param schema schema of the topic
      * @return
      */
-    public GenericRecord createCarMaintenanceRecord(Schema schema) {
+    public GenericRecord createEventMessage(Schema schema) {
         // Please remember to use the appropriate orgId for the CreatedById field.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
-                .set("CreatedById", "005xx000001Svwo").set("Mileage__c", 95443.0).set("Cost__c", 99.40)
-                .set("WorkDescription__c", "Replaced front brakes").build();
+                .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1")
+                .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
 
     /**
-     * Helper function to create an event of the CarMaintenance topic with a counter appended to
-     * the end of the WorkDescription. Used while publishing multiple events.
+     * Helper function to create an event with a counter appended to
+     * the end of a Text field. Used while publishing multiple events.
+     * Currently generates event message for the Order_Event topic. Modify accordingly for a topic of your choice.
      *
      * @param schema schema of the topic
-     * @param counter counter to be appended towards the end of the WorkDescription
+     * @param counter counter to be appended towards the end of any Text Field
      * @return
      */
-    public GenericRecord createCarMaintenanceRecord(Schema schema, final int counter) {
+    public GenericRecord createEventMessage(Schema schema, final int counter) {
         // Please remember to use the appropriate orgId for the CreatedById field.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
-                .set("CreatedById", "005xx000001Svwo").set("Mileage__c", 95443.0).set("Cost__c", 99.40)
-                .set("WorkDescription__c", "Replaced front brakes; event: " + counter).build();
+                .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1" + counter)
+                .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
+    }
+
+    public List<GenericRecord> createEventMessages(Schema schema, String userId, final int numEvents) {
+
+        String[] orderNumbers = {"99","100","101","102","103"};
+        String[] cities = {"Los Angeles", "New York", "San Francisco", "San Jose", "Boston"};
+        Double[] amounts = {35.0, 20.0, 2.0, 123.0, 180.0};
+
+        List<GenericRecord> events = new ArrayList<>();
+        for (int i=0; i<numEvents; i++) {
+            events.add(new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
+                    .set("CreatedById", userId).set("Order_Number__c", orderNumbers[i])
+                    .set("City__c", cities[i]).set("Amount__c", amounts[i]).build());
+        }
+
+        return events;
     }
 
 

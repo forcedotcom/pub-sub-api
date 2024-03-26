@@ -269,7 +269,7 @@ public class Subscribe extends CommonContext {
         Schema writerSchema = getSchema(ce.getEvent().getSchemaId());
         this.storedReplay = ce.getReplayId();
         GenericRecord record = deserialize(writerSchema, ce.getEvent().getPayload());
-        logger.info("Received event with payload: " + record.toString());
+        logger.info("Received event with payload: " + record.toString() + " with schema name: " + writerSchema.getName());
     }
 
     /**
