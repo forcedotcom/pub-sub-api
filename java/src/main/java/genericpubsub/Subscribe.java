@@ -85,7 +85,7 @@ public class Subscribe extends CommonContext {
         // Thread being blocked here for demonstration of this specific example. Blocking the thread in production is not recommended.
         while(isActive.get()) {
             waitInMillis(5_000);
-            logger.info("Subscription Active. Received " + receivedEvents.get() + " events.");
+            logger.info("Subscription Active. Received a total of " + receivedEvents.get() + " events.");
         }
     }
 

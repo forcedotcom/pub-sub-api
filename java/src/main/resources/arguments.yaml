@@ -12,14 +12,14 @@ PUBSUB_HOST: api.pubsub.salesforce.com
 # Pub/Sub API Host
 PUBSUB_PORT: 7443
 # Your Salesforce Login URL
-LOGIN_URL: null
+LOGIN_URL: https://login.salesforce.com
 
 # For authentication, you can use either username/password or accessToken/tenantId types.
 # Either one of the combinations is required. Please specify `null` values to the unused type.
 # Your Salesforce Username
-USERNAME: null
+USERNAME: Siddartha.Shankar@colorado.edu
 # Your Salesforce Password
-PASSWORD: null
+PASSWORD: test12345673wtAkRpDakdRjH74Yn7lwHCp
 # Your Salesforce org Tenant ID
 TENANT_ID: null
 # Your Salesforce Session Token
@@ -29,7 +29,7 @@ ACCESS_TOKEN: null
 # Optional configurations:
 # =========================
 # Topic to publish/subscribe to (default: /event/Order_Event__e)
-TOPIC: null
+TOPIC: /data/OpportunityChangeEvent
 # Number of Events to publish in single or separate batches (default: 5)
 # Used only by Publish.java and PublishStream.java
 NUMBER_OF_EVENTS_TO_PUBLISH: null

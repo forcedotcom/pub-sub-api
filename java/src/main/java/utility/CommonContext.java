@@ -176,13 +176,14 @@ public class CommonContext implements AutoCloseable {
 
     /**
      * Helper function to create an event.
-     * Currently generates event message for the topic "Order Event". Modify accordingly for a topic of your choice.
+     * Currently generates event message for the topic "Order Event". Modify the fields
+     * accordingly for an event of your choice.
      *
      * @param schema schema of the topic
      * @return
      */
     public GenericRecord createEventMessage(Schema schema) {
-        // Please remember to use the appropriate orgId for the CreatedById field.
+        // Update CreatedById with the appropriate User Id from your org.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
                 .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1")
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
@@ -191,29 +192,31 @@ public class CommonContext implements AutoCloseable {
     /**
      * Helper function to create an event with a counter appended to
      * the end of a Text field. Used while publishing multiple events.
-     * Currently generates event message for the topic "Order Event". Modify accordingly for a topic of your choice.
+     * Currently generates event message for the topic "Order Event". Modify the fields
+     * accordingly for an event of your choice.
      *
      * @param schema schema of the topic
      * @param counter counter to be appended towards the end of any Text Field
      * @return
      */
     public GenericRecord createEventMessage(Schema schema, final int counter) {
-        // Please remember to use the appropriate orgId for the CreatedById field.
+        // Update CreatedById with the appropriate User Id from your org.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
                 .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1" + counter)
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
 
-    public List<GenericRecord> createEventMessages(Schema schema, String userId, final int numEvents) {
+    public List<GenericRecord> createEventMessages(Schema schema, final int numEvents) {
 
         String[] orderNumbers = {"99","100","101","102","103"};
         String[] cities = {"Los Angeles", "New York", "San Francisco", "San Jose", "Boston"};
         Double[] amounts = {35.0, 20.0, 2.0, 123.0, 180.0};
 
+        // Update CreatedById with the appropriate User Id from your org.
         List<GenericRecord> events = new ArrayList<>();
         for (int i=0; i<numEvents; i++) {
-            events.add(new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis() / 1000)
-                    .set("CreatedById", userId).set("Order_Number__c", orderNumbers[i])
+            events.add(new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
+                    .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", orderNumbers[i])
                     .set("City__c", cities[i]).set("Amount__c", amounts[i]).build());
         }
 

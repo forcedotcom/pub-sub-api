@@ -148,7 +148,7 @@ public class PublishStream extends CommonContext {
      */
     private ProducerEvent[] generateProducerEvents(String userId, int count) throws IOException {
         Schema schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
-        List<GenericRecord> events = createEventMessages(schema, userId, count);
+        List<GenericRecord> events = createEventMessages(schema, count);
 
         ProducerEvent[] prodEvents = new ProducerEvent[count];
         GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(events.get(0).getSchema());
