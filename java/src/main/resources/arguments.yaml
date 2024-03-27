@@ -29,7 +29,7 @@ ACCESS_TOKEN: null
 # Optional configurations:
 # =========================
 # Topic to publish/subscribe to (default: /event/Order_Event__e)
-TOPIC: /data/OpportunityChangeEvent
+TOPIC: null
 # Number of Events to publish in single or separate batches (default: 5)
 # Used only by Publish.java and PublishStream.java
 NUMBER_OF_EVENTS_TO_PUBLISH: null
