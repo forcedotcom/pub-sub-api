@@ -25,6 +25,7 @@ public class ExampleConfigurations {
     private Integer pubsubPort;
     private String topic;
     private Integer numberOfEventsToPublish;
+    private Boolean singleBatch;
     private Integer numberOfEventsToSubscribeInEachFetchRequest;
     private Boolean plaintextChannel;
     private Boolean providedLoginUrl;
@@ -33,7 +34,7 @@ public class ExampleConfigurations {
 
     public ExampleConfigurations() {
         this(null, null, null, null, null,
-                null, null, null, 5, 5,
+                null, null, null, 5, false, 5,
                 false, false, ReplayPreset.LATEST, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
@@ -50,11 +51,13 @@ public class ExampleConfigurations {
         // Reading Optional Parameters
         this.username = obj.get("USERNAME") == null ? null : obj.get("USERNAME").toString();
         this.password = obj.get("PASSWORD") == null ? null : obj.get("PASSWORD").toString();
-        this.topic = obj.get("TOPIC") == null ? "/event/CarMaintenance__e" : obj.get("TOPIC").toString();
+        this.topic = obj.get("TOPIC") == null ? "/event/Order_Event__e" : obj.get("TOPIC").toString();
         this.tenantId = obj.get("TENANT_ID") == null ? null : obj.get("TENANT_ID").toString();
         this.accessToken = obj.get("ACCESS_TOKEN") == null ? null : obj.get("ACCESS_TOKEN").toString();
         this.numberOfEventsToPublish = obj.get("NUMBER_OF_EVENTS_TO_PUBLISH") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_PUBLISH").toString());
+        this.singleBatch = obj.get("SINGLE_BATCH") == null ?
+                false : Boolean.parseBoolean(obj.get("SINGLE_BATCH").toString());
         this.numberOfEventsToSubscribeInEachFetchRequest = obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
@@ -78,11 +81,11 @@ public class ExampleConfigurations {
     public ExampleConfigurations(String username, String password, String loginUrl,
                                  String pubsubHost, int pubsubPort, String topic) {
         this(username, password, loginUrl, null, null, pubsubHost, pubsubPort, topic,
-                5, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
+                5, false, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
-                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,
+                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,Boolean singleBatch,
                                  Integer numberOfEventsToSubscribeInEachFetchRequest, Boolean plaintextChannel, Boolean providedLoginUrl,
                                  ReplayPreset replayPreset, ByteString replayId) {
         this.username = username;
@@ -163,6 +166,14 @@ public class ExampleConfigurations {
 
     public void setNumberOfEventsToPublish(Integer numberOfEventsToPublish) {
         this.numberOfEventsToPublish = numberOfEventsToPublish;
+    }
+
+    public Boolean getSingleBatch() {
+        return singleBatch;
+    }
+
+    public void setSingleBatch(Boolean singleBatch) {
+        this.singleBatch = singleBatch;
     }
 
     public int getNumberOfEventsToSubscribeInEachFetchRequest() {

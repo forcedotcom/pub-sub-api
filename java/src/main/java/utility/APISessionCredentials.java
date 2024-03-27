@@ -1,5 +1,6 @@
 package utility;
 
+import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
@@ -21,6 +22,8 @@ public class APISessionCredentials extends CallCredentials {
     public static final Metadata.Key<String> SESSION_TOKEN_KEY = keyOf("accessToken");
     // Tenant Id of the customer org
     public static final Metadata.Key<String> TENANT_ID_KEY = keyOf("tenantId");
+    // Client trace Id to trace the requests
+    public static final Metadata.Key<String> CLIENT_TRACE_ID_KEY = keyOf("x-client-trace-id");
 
     private String instanceURL;
     private String tenantId;
@@ -36,11 +39,14 @@ public class APISessionCredentials extends CallCredentials {
 
     @Override
     public void applyRequestMetadata(RequestInfo requestInfo, Executor executor, MetadataApplier metadataApplier) {
+        String clientTraceId = UUID.randomUUID().toString();
+        log.info("Client Trace Id for current request: " + clientTraceId);
         log.debug("API session credentials applied to " + requestInfo.getMethodDescriptor());
         Metadata headers = new Metadata();
         headers.put(INSTANCE_URL_KEY, instanceURL);
         headers.put(TENANT_ID_KEY, tenantId);
         headers.put(SESSION_TOKEN_KEY, token);
+        headers.put(CLIENT_TRACE_ID_KEY, clientTraceId);
         metadataApplier.apply(headers);
     }
 

@@ -39,11 +39,9 @@ public class ProcessChangeEventHeader {
     protected Subscribe subscriber;
     private ExampleConfigurations subscriberParams;
 
-    private static final String SUBSCRIBER_TOPIC = "/data/OpportunityChangeEvent";
-
-    public ProcessChangeEventHeader(ExampleConfigurations requiredParams) {
+    public ProcessChangeEventHeader(ExampleConfigurations exampleParams) {
         logger.info("Setting Up Subscriber");
-        this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 100);
+        this.subscriberParams = setupSubscriberParameters(exampleParams, exampleParams.getTopic(), 100);
         this.subscriber = new Subscribe(subscriberParams, getProcessChangeEventHeaderResponseObserver());
     }
 
@@ -100,9 +98,9 @@ public class ProcessChangeEventHeader {
     }
 
     public static void main(String[] args) throws IOException {
-        ExampleConfigurations requiredParameters = new ExampleConfigurations("arguments.yaml");
+        ExampleConfigurations exampleParams = new ExampleConfigurations("arguments.yaml");
         try {
-            ProcessChangeEventHeader processChangeEventHeaderExample = new ProcessChangeEventHeader(requiredParameters);
+            ProcessChangeEventHeader processChangeEventHeaderExample = new ProcessChangeEventHeader(exampleParams);
             processChangeEventHeaderExample.startApp();
             processChangeEventHeaderExample.stopApp();
         } catch (Exception e) {
