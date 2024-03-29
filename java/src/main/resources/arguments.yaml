@@ -28,10 +28,15 @@ ACCESS_TOKEN: null
 # =========================
 # Optional configurations:
 # =========================
-# Topic to publish/subscribe to (default: /event/CarMaintenance__e)
+# Topic to publish/subscribe to (default: /event/Order_Event__e)
 TOPIC: null
-# Number of Events to publish (default: 5)
+# Number of Events to publish in single or separate batches (default: 5)
+# Used only by PublishStream.java
 NUMBER_OF_EVENTS_TO_PUBLISH: null
+# Indicates whether to add events to a single PublishRequest (true) or
+# in different PublishRequests (default: false)
+# Used only by PublishStream.java
+SINGLE_PUBLISH_REQUEST: null
 # Number of Events to subscribe (default: 5)
 NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 # ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})

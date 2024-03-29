@@ -25,7 +25,7 @@ import utility.CommonContext;
 import utility.ExampleConfigurations;
 
 /**
- * A single-topic publisher that creates CarMaintenance events and publishes them. This example
+ * A single-topic publisher that creates Order Event events and publishes them. This example
  * uses Pub/Sub API's PublishStream RPC to publish events.
  *
  * Example:
@@ -52,24 +52,30 @@ public class PublishStream extends CommonContext {
      * @return ByteString
      * @throws Exception
      */
-    public void publishStream(int numEventsToPublish) throws Exception {
+    public void publishStream(int numEventsToPublish, Boolean singlePublishRequest) throws Exception {
         CountDownLatch finishLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
         final List<Status> errorStatuses = Lists.newArrayList();
-        final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numEventsToPublish);
+        final int numExpectedPublishResponses = singlePublishRequest ? 1 : numEventsToPublish;
+        final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numExpectedPublishResponses);
         AtomicInteger failed = new AtomicInteger(0);
         StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(errorStatuses, finishLatchRef,
-                numEventsToPublish, publishResponses, failed);
+                numExpectedPublishResponses, publishResponses, failed);
 
         // construct the stream
         requestObserver = (ClientCallStreamObserver<PublishRequest>) asyncStub.publishStream(pubObserver);
 
-        for (int i = 0; i < numEventsToPublish; i++) {
-            requestObserver.onNext(generatePublishRequest(i));
+        if (singlePublishRequest == false) {
+            // Publish each event in a separate batch
+            for (int i = 0; i < numEventsToPublish; i++) {
+                requestObserver.onNext(generatePublishRequest(i, singlePublishRequest));
+            }
+        } else {
+            // Publish all events in one batch
+            requestObserver.onNext(generatePublishRequest(numEventsToPublish, singlePublishRequest));
         }
 
-        validatePublishResponse(errorStatuses, finishLatch, numEventsToPublish,
-                publishResponses, failed);
+        validatePublishResponse(errorStatuses, finishLatch, numExpectedPublishResponses, publishResponses, failed);
         requestObserver.onCompleted();
     }
 
@@ -120,7 +126,7 @@ public class PublishStream extends CommonContext {
      */
     private ProducerEvent generateProducerEvent(int counter) throws IOException {
         Schema schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
-        GenericRecord event = createCarMaintenanceRecord(schema, counter);
+        GenericRecord event = createEventMessage(schema, counter);
 
         // Convert to byte array
         GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(event.getSchema());
@@ -133,15 +139,52 @@ public class PublishStream extends CommonContext {
     }
 
     /**
+     * Creates an array of ProducerEvents to be published in a PublishRequest.
+     *
+     * @param count
+     * @return
+     * @throws IOException
+     */
+    private ProducerEvent[] generateProducerEvents(int count) throws IOException {
+        Schema schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
+        List<GenericRecord> events = createEventMessages(schema, count);
+
+        ProducerEvent[] prodEvents = new ProducerEvent[count];
+        GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(events.get(0).getSchema());
+
+        for(int i=0; i<count; i++) {
+            // Convert to byte array
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(buffer, null);
+            writer.write(events.get(i), encoder);
+            prodEvents[i] = ProducerEvent.newBuilder().setSchemaId(schemaInfo.getSchemaId())
+                    .setPayload(ByteString.copyFrom(buffer.toByteArray())).build();
+        }
+
+        return prodEvents;
+    }
+
+    /**
      * Helper function to generate the PublishRequest with the generated ProducerEvent to be sent
      * using the PublishStream RPC
      *
      * @return PublishRequest
      * @throws IOException
      */
-    private PublishRequest generatePublishRequest(int counter) throws IOException {
-        ProducerEvent e = generateProducerEvent(counter);
-        return PublishRequest.newBuilder().setTopicName(busTopicName).addEvents(e).build();
+    private PublishRequest generatePublishRequest(int count, Boolean singlePublishRequest) throws IOException {
+        if (singlePublishRequest == false) {
+            // One event per batch
+            ProducerEvent e = generateProducerEvent(count);
+            return PublishRequest.newBuilder().setTopicName(busTopicName).addEvents(e).build();
+        } else {
+            // Multiple events per batch
+            ProducerEvent[] prodEvents = generateProducerEvents(count);
+            PublishRequest.Builder p = PublishRequest.newBuilder().setTopicName(busTopicName);
+            for(int i=0; i<count; i++) {
+                p.addEvents(prodEvents[i]);
+            }
+            return p.build();
+        }
     }
 
     /**
@@ -173,7 +216,6 @@ public class PublishStream extends CommonContext {
                         lastPublishedReplayId = publishResult.getReplayId();
                     }
                 }
-
                 if (publishResponses.size() == expectedResponseCount) {
                     finishLatchRef.get().countDown();
                 }
@@ -200,7 +242,8 @@ public class PublishStream extends CommonContext {
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
         try (PublishStream example = new PublishStream(exampleConfigurations)) {
-            example.publishStream(exampleConfigurations.getNumberOfEventsToPublish());
+            example.publishStream(exampleConfigurations.getNumberOfEventsToPublish(),
+                                  exampleConfigurations.getSinglePublishRequest());
         } catch (Exception e) {
             printStatusRuntimeException("Error During PublishStream", e);
         }

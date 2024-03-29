@@ -20,14 +20,14 @@ In the `src/main` directory of the project, you will find several sub-directorie
 3. Run `mvn clean install` from the `java` directory to build the project and generate required sources from the proto file.
 4. The `arguments.yaml` file in the `src/main/resources` sub-directory contains a list of required and optional configurations needed to run the examples. The file contains detailed comments on how to set the configurations.
 5. Get the username, password, and login URL of the Salesforce org you wish to use.
-6. For the examples in `genericpubsub` package, a custom **_CarMaintenance_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. Ensure your CarMaintenance platform event matches the following structure:
+6. For the examples in `genericpubsub` package, a custom **_Order Event_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. Ensure your `Order Event` platform event matches the following structure:
    - Standard Fields
-       - Label: `CarMaintenance`
-       - Plural Label: `CarMaintenances`
+       - Label: `Order Event`
+       - Plural Label: `Order Events`
    - Custom Fields
-       - `Cost` (Number)
-       - `Mileage` (Number)
-       - `WorkDescription` (Text, 200)
+       - `Order Number` (Text, 18)
+       - `City` (Text, 50)
+       - `Amount` (Number, (16,2))
 7. For the examples in the `accountupdateapp` package, another custom **_NewAccount_** [platform event](https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_define_ui.htm) has to be created in the Salesforce org. [More info here](src/main/java/accountupdateapp/README.md).
 
 ### Execution
@@ -41,6 +41,7 @@ In the `src/main` directory of the project, you will find several sub-directorie
    2. Optional Parameters:
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
+       * `SINGLE_PUBLISH_REQUEST`: Specify if you want to publish the events in a single or multiple PublishRequests.
        * `NUMBER_OF_EVENTS_IN_FETCHREQUEST`: Specify the number of events that the Subscribe RPC requests from the server in each FetchRequest. The example fetches at most 5 events in each Subscribe request. If you pass in more than 5, it sends multiple Subscribe requests with at most 5 events requested in FetchRequest each. For more information about requesting events, see [Pull Subscription and Flow Control](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html) in the Pub/Sub API documentation.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
          * If a subscription has to be started using the CUSTOM replay preset, the `REPLAY_ID` parameter is mandatory. 
