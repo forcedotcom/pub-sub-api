@@ -25,7 +25,7 @@ public class ExampleConfigurations {
     private Integer pubsubPort;
     private String topic;
     private Integer numberOfEventsToPublish;
-    private Boolean singleBatch;
+    private Boolean singlePublishRequest;
     private Integer numberOfEventsToSubscribeInEachFetchRequest;
     private Boolean plaintextChannel;
     private Boolean providedLoginUrl;
@@ -56,8 +56,8 @@ public class ExampleConfigurations {
         this.accessToken = obj.get("ACCESS_TOKEN") == null ? null : obj.get("ACCESS_TOKEN").toString();
         this.numberOfEventsToPublish = obj.get("NUMBER_OF_EVENTS_TO_PUBLISH") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_PUBLISH").toString());
-        this.singleBatch = obj.get("SINGLE_BATCH") == null ?
-                false : Boolean.parseBoolean(obj.get("SINGLE_BATCH").toString());
+        this.singlePublishRequest = obj.get("SINGLE_PUBLISH_REQUEST") == null ?
+                false : Boolean.parseBoolean(obj.get("SINGLE_PUBLISH_REQUEST").toString());
         this.numberOfEventsToSubscribeInEachFetchRequest = obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
@@ -85,7 +85,7 @@ public class ExampleConfigurations {
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
-                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,Boolean singleBatch,
+                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,Boolean singlePublishRequest,
                                  Integer numberOfEventsToSubscribeInEachFetchRequest, Boolean plaintextChannel, Boolean providedLoginUrl,
                                  ReplayPreset replayPreset, ByteString replayId) {
         this.username = username;
@@ -168,12 +168,12 @@ public class ExampleConfigurations {
         this.numberOfEventsToPublish = numberOfEventsToPublish;
     }
 
-    public Boolean getSingleBatch() {
-        return singleBatch;
+    public Boolean getSinglePublishRequest() {
+        return singlePublishRequest;
     }
 
-    public void setSingleBatch(Boolean singleBatch) {
-        this.singleBatch = singleBatch;
+    public void setSinglePublishRequest(Boolean singlePublishRequest) {
+        this.singlePublishRequest = singlePublishRequest;
     }
 
     public int getNumberOfEventsToSubscribeInEachFetchRequest() {

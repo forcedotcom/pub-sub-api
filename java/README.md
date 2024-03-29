@@ -41,7 +41,7 @@ In the `src/main` directory of the project, you will find several sub-directorie
    2. Optional Parameters:
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
-       * `SINGLE_BATCH`: Specify if you want to publish the events in a single or multiple batches, i.e. PublishRequests.
+       * `SINGLE_PUBLISH_REQUEST`: Specify if you want to publish the events in a single or multiple PublishRequests.
        * `NUMBER_OF_EVENTS_IN_FETCHREQUEST`: Specify the number of events that the Subscribe RPC requests from the server in each FetchRequest. The example fetches at most 5 events in each Subscribe request. If you pass in more than 5, it sends multiple Subscribe requests with at most 5 events requested in FetchRequest each. For more information about requesting events, see [Pull Subscription and Flow Control](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html) in the Pub/Sub API documentation.
        * `REPLAY_PRESET`: Specify the ReplayPreset for subscribe examples.
          * If a subscription has to be started using the CUSTOM replay preset, the `REPLAY_ID` parameter is mandatory. 

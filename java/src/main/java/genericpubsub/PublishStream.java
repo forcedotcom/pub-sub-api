@@ -52,11 +52,11 @@ public class PublishStream extends CommonContext {
      * @return ByteString
      * @throws Exception
      */
-    public void publishStream(int numEventsToPublish, Boolean singleBatch) throws Exception {
+    public void publishStream(int numEventsToPublish, Boolean singlePublishRequest) throws Exception {
         CountDownLatch finishLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
         final List<Status> errorStatuses = Lists.newArrayList();
-        final int numExpectedPublishResponses = singleBatch ? 1 : numEventsToPublish;
+        final int numExpectedPublishResponses = singlePublishRequest ? 1 : numEventsToPublish;
         final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numExpectedPublishResponses);
         AtomicInteger failed = new AtomicInteger(0);
         StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(errorStatuses, finishLatchRef,
@@ -65,14 +65,14 @@ public class PublishStream extends CommonContext {
         // construct the stream
         requestObserver = (ClientCallStreamObserver<PublishRequest>) asyncStub.publishStream(pubObserver);
 
-        if (singleBatch == false) {
+        if (singlePublishRequest == false) {
             // Publish each event in a separate batch
             for (int i = 0; i < numEventsToPublish; i++) {
-                requestObserver.onNext(generatePublishRequest(i, singleBatch));
+                requestObserver.onNext(generatePublishRequest(i, singlePublishRequest));
             }
         } else {
             // Publish all events in one batch
-            requestObserver.onNext(generatePublishRequest(numEventsToPublish, singleBatch));
+            requestObserver.onNext(generatePublishRequest(numEventsToPublish, singlePublishRequest));
         }
 
         validatePublishResponse(errorStatuses, finishLatch, numExpectedPublishResponses, publishResponses, failed);
@@ -171,8 +171,8 @@ public class PublishStream extends CommonContext {
      * @return PublishRequest
      * @throws IOException
      */
-    private PublishRequest generatePublishRequest(int count, Boolean singleBatch) throws IOException {
-        if (singleBatch == false) {
+    private PublishRequest generatePublishRequest(int count, Boolean singlePublishRequest) throws IOException {
+        if (singlePublishRequest == false) {
             // One event per batch
             ProducerEvent e = generateProducerEvent(count);
             return PublishRequest.newBuilder().setTopicName(busTopicName).addEvents(e).build();
@@ -243,7 +243,7 @@ public class PublishStream extends CommonContext {
         // order to close the resources used.
         try (PublishStream example = new PublishStream(exampleConfigurations)) {
             example.publishStream(exampleConfigurations.getNumberOfEventsToPublish(),
-                                  exampleConfigurations.getSingleBatch());
+                                  exampleConfigurations.getSinglePublishRequest());
         } catch (Exception e) {
             printStatusRuntimeException("Error During PublishStream", e);
         }
