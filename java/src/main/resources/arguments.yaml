@@ -31,7 +31,7 @@ ACCESS_TOKEN: null
 # Topic to publish/subscribe to (default: /event/Order_Event__e)
 TOPIC: null
 # Number of Events to publish in single or separate batches (default: 5)
-# Used only by Publish.java and PublishStream.java
+# Used only by PublishStream.java
 NUMBER_OF_EVENTS_TO_PUBLISH: null
 # Indicates whether to add events to a single batch in one PublishRequest (true) or
 # to separate batches in different PublishRequests (default: false)

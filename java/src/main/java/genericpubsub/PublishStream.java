@@ -68,11 +68,11 @@ public class PublishStream extends CommonContext {
         if (singleBatch == false) {
             // Publish each event in a separate batch
             for (int i = 0; i < numEventsToPublish; i++) {
-                requestObserver.onNext(generatePublishRequest("0055f000005mc66AAA", i, singleBatch));
+                requestObserver.onNext(generatePublishRequest(i, singleBatch));
             }
         } else {
             // Publish all events in one batch
-            requestObserver.onNext(generatePublishRequest("0055f000005mc66AAA", numEventsToPublish, singleBatch));
+            requestObserver.onNext(generatePublishRequest(numEventsToPublish, singleBatch));
         }
 
         validatePublishResponse(errorStatuses, finishLatch, numExpectedPublishResponses, publishResponses, failed);
@@ -141,12 +141,11 @@ public class PublishStream extends CommonContext {
     /**
      * Creates an array of ProducerEvents to be published in a PublishRequest.
      *
-     * @param userId
      * @param count
      * @return
      * @throws IOException
      */
-    private ProducerEvent[] generateProducerEvents(String userId, int count) throws IOException {
+    private ProducerEvent[] generateProducerEvents(int count) throws IOException {
         Schema schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
         List<GenericRecord> events = createEventMessages(schema, count);
 
@@ -172,14 +171,14 @@ public class PublishStream extends CommonContext {
      * @return PublishRequest
      * @throws IOException
      */
-    private PublishRequest generatePublishRequest(String userId, int count, Boolean singleBatch) throws IOException {
+    private PublishRequest generatePublishRequest(int count, Boolean singleBatch) throws IOException {
         if (singleBatch == false) {
             // One event per batch
             ProducerEvent e = generateProducerEvent(count);
             return PublishRequest.newBuilder().setTopicName(busTopicName).addEvents(e).build();
         } else {
             // Multiple events per batch
-            ProducerEvent[] prodEvents = generateProducerEvents(userId, count);
+            ProducerEvent[] prodEvents = generateProducerEvents(count);
             PublishRequest.Builder p = PublishRequest.newBuilder().setTopicName(busTopicName);
             for(int i=0; i<count; i++) {
                 p.addEvents(prodEvents[i]);
