@@ -54,7 +54,7 @@ public class ProcessChangeEventHeader {
                         Schema writerSchema = subscriber.getSchema(ce.getEvent().getSchemaId());
                         GenericRecord eventPayload = CommonContext.deserialize(writerSchema, ce.getEvent().getPayload());
                         subscriber.updateReceivedEvents(1);
-                        logger.info("Received event with Payload: " + eventPayload.toString());
+                        logger.info("Received event with payload: " + eventPayload.toString());
                         List<String> changedFields = getFieldListFromBitmap(writerSchema, (GenericData.Record) eventPayload.get("ChangeEventHeader"), "changedFields");
                         if (!changedFields.isEmpty()) {
                             logger.info("============================");
