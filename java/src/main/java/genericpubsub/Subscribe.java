@@ -46,8 +46,8 @@ public class Subscribe extends CommonContext {
     private final StreamObserver<FetchResponse> responseStreamObserver;
     private final ReplayPreset replayPreset;
     private final ByteString customReplayId;
-    private final ExecutorService eventProcessingExecutors;
     private final ScheduledExecutorService retryScheduler;
+    // Replay should be stored in replay store as bytes since replays are opaque.
     private volatile ByteString storedReplay;
 
     public Subscribe(ExampleConfigurations exampleConfigurations) {
@@ -60,7 +60,6 @@ public class Subscribe extends CommonContext {
         this.replayPreset = exampleConfigurations.getReplayPreset();
         this.customReplayId = exampleConfigurations.getReplayId();
         this.retryScheduler = Executors.newScheduledThreadPool(1);
-        this.eventProcessingExecutors = Executors.newFixedThreadPool(3);
     }
 
     public Subscribe(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
@@ -73,7 +72,6 @@ public class Subscribe extends CommonContext {
         this.replayPreset = exampleConfigurations.getReplayPreset();
         this.customReplayId = exampleConfigurations.getReplayId();
         this.retryScheduler = Executors.newScheduledThreadPool(1);
-        this.eventProcessingExecutors = Executors.newFixedThreadPool(3);
     }
 
     /**
@@ -143,10 +141,7 @@ public class Subscribe extends CommonContext {
                 logger.info("RPC ID: " + fetchResponse.getRpcId());
                 for(ConsumerEvent ce : fetchResponse.getEventsList()) {
                     try {
-                        // Unless the schema of the event is available in the local schema cache, there is a blocking
-                        // GetSchema call being made to obtain the schema which may block the thread. Therefore, the
-                        // processing of events is done asynchronously.
-                        CompletableFuture.runAsync(new EventProcessor(ce), eventProcessingExecutors);
+                        processEvent(ce);
                     } catch (Exception e) {
                         logger.info(e.toString());
                     }
@@ -244,32 +239,13 @@ public class Subscribe extends CommonContext {
     }
 
     /**
-     * A Runnable class that is used to process the events asynchronously using CompletableFuture.
-     */
-    private class EventProcessor implements Runnable {
-        private ConsumerEvent ce;
-        public EventProcessor(ConsumerEvent consumerEvent) {
-            this.ce = consumerEvent;
-        }
-
-        @Override
-        public void run() {
-            try {
-                processEvent(ce);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    /**
      * Helper function to process the events received.
      */
     private void processEvent(ConsumerEvent ce) throws IOException {
         Schema writerSchema = getSchema(ce.getEvent().getSchemaId());
         this.storedReplay = ce.getReplayId();
         GenericRecord record = deserialize(writerSchema, ce.getEvent().getPayload());
-        logger.info("Received event with payload: " + record.toString() + " with schema name: " + writerSchema.getName());
+        logger.info("Received event with payload: " + record.toString() + " with schema name: " + writerSchema.getName() + " with id: " + ce.getEvent().getId());
     }
 
     /**
@@ -327,9 +303,6 @@ public class Subscribe extends CommonContext {
             }
             if (retryScheduler != null) {
                 retryScheduler.shutdown();
-            }
-            if (eventProcessingExecutors != null) {
-                eventProcessingExecutors.shutdown();
             }
         } catch (Exception e) {
             logger.info(e.toString());
