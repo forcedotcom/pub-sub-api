@@ -3,6 +3,7 @@ package genericpubsub;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,11 +56,10 @@ public class PublishStream extends CommonContext {
     public void publishStream(int numEventsToPublish, Boolean singlePublishRequest) throws Exception {
         CountDownLatch finishLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
-        final List<Status> errorStatuses = Lists.newArrayList();
         final int numExpectedPublishResponses = singlePublishRequest ? 1 : numEventsToPublish;
         final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numExpectedPublishResponses);
         AtomicInteger failed = new AtomicInteger(0);
-        StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(errorStatuses, finishLatchRef,
+        StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(finishLatchRef,
                 numExpectedPublishResponses, publishResponses, failed);
 
         // construct the stream
@@ -75,7 +75,7 @@ public class PublishStream extends CommonContext {
             requestObserver.onNext(generatePublishRequest(numEventsToPublish, singlePublishRequest));
         }
 
-        validatePublishResponse(errorStatuses, finishLatch, numExpectedPublishResponses, publishResponses, failed);
+        validatePublishResponse(finishLatch, numExpectedPublishResponses, publishResponses, failed, numEventsToPublish);
         requestObserver.onCompleted();
     }
 
@@ -89,31 +89,32 @@ public class PublishStream extends CommonContext {
      * @return
      * @throws Exception
      */
-    private void validatePublishResponse(List<Status> errorStatus, CountDownLatch finishLatch,
-                                               int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed) throws Exception {
+    private void validatePublishResponse(CountDownLatch finishLatch,
+                                               int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed, int expectedNumEventsPublished) throws Exception {
         String exceptionMsg;
+        boolean failedPublish = false;
         if (!finishLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            failedPublish = true;
             exceptionMsg = "[ERROR] publishStream timed out after: " + TIMEOUT_SECONDS + "sec";
             logger.error(exceptionMsg);
         }
 
-        boolean receivedAllResponses = true;
         if (expectedResponseCount != publishResponses.size()) {
-            receivedAllResponses = false;
-            exceptionMsg = "[ERROR] PublishStream received: " + publishResponses.size() + " events instead of expected "
+            failedPublish = true;
+            exceptionMsg = "[ERROR] PublishStream received: " + publishResponses.size() + " PublishResponses instead of expected "
                     + expectedResponseCount;
             logger.error(exceptionMsg);
-
-            errorStatus.stream().forEach(status -> {
-                logger.error("[ERROR] Unexpected error status: " + status);
-            });
         }
 
-        if (failed.get() != 0 || !receivedAllResponses) {
+        if (failed.get() != 0) {
+            failedPublish = true;
             exceptionMsg = "[ERROR] Failed to publish all events. " + failed + " failed out of "
-                    + expectedResponseCount;
+                    + expectedNumEventsPublished;
             logger.error(exceptionMsg);
-            throw new Exception(exceptionMsg);
+        }
+
+        if (failedPublish) {
+            throw new RuntimeException("Failed to publish events.");
         }
     }
 
@@ -157,8 +158,9 @@ public class PublishStream extends CommonContext {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(buffer, null);
             writer.write(events.get(i), encoder);
+            // Setting event id which can be used to correlate PublishResponses returned from Pub/Sub API server
             prodEvents[i] = ProducerEvent.newBuilder().setSchemaId(schemaInfo.getSchemaId())
-                    .setPayload(ByteString.copyFrom(buffer.toByteArray())).build();
+                    .setPayload(ByteString.copyFrom(buffer.toByteArray())).setId(UUID.randomUUID().toString()).build();
         }
 
         return prodEvents;
@@ -196,8 +198,7 @@ public class PublishStream extends CommonContext {
      * @param publishResponses
      * @return
      */
-    private StreamObserver<PublishResponse> getDefaultPublishStreamObserver(List<Status> errorStatus,
-                                                                            AtomicReference<CountDownLatch> finishLatchRef, int expectedResponseCount,
+    private StreamObserver<PublishResponse> getDefaultPublishStreamObserver(AtomicReference<CountDownLatch> finishLatchRef, int expectedResponseCount,
                                                                             List<PublishResponse> publishResponses, AtomicInteger failed) {
         return new StreamObserver<>() {
             @Override
@@ -209,10 +210,10 @@ public class PublishStream extends CommonContext {
                 for (PublishResult publishResult : publishResponse.getResultsList()) {
                     if (publishResult.hasError()) {
                         failed.incrementAndGet();
-                        logger.error("[ERROR] Publishing event having correlationKey: " + publishResult.getCorrelationKey() +
+                        logger.error("[ERROR] Publishing event with correlationKey: " + publishResult.getCorrelationKey() +
                                 " failed with error: " + publishResult.getError().getMsg());
                     } else {
-                        logger.info("Event publish successful with correlationKey: " + publishResult.getCorrelationKey());
+                        logger.info("Event published successful with correlationKey: " + publishResult.getCorrelationKey());
                         lastPublishedReplayId = publishResult.getReplayId();
                     }
                 }
@@ -223,14 +224,14 @@ public class PublishStream extends CommonContext {
 
             @Override
             public void onError(Throwable t) {
+                logger.error("[ERROR] Unexpected error status: " + Status.fromThrowable(t));
                 printStatusRuntimeException("Error during PublishStream", (Exception) t);
-                errorStatus.add(Status.fromThrowable(t));
                 finishLatchRef.get().countDown();
             }
 
             @Override
             public void onCompleted() {
-                logger.info("Successfully published " + expectedResponseCount + " events at " + busTopicName + " for tenant " + tenantGuid);
+                logger.info("Successfully published events for topic " + busTopicName + " for tenant " + tenantGuid);
                 finishLatchRef.get().countDown();
             }
         };
