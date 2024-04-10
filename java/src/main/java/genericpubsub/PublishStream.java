@@ -54,9 +54,9 @@ public class PublishStream extends CommonContext {
      * @throws Exception
      */
     public void publishStream(int numEventsToPublish, Boolean singlePublishRequest) throws Exception {
-        final int numExpectedPublishResponses = singlePublishRequest ? 1 : numEventsToPublish;
-        CountDownLatch finishLatch = new CountDownLatch(numExpectedPublishResponses);
+        CountDownLatch finishLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> finishLatchRef = new AtomicReference<>(finishLatch);
+        final int numExpectedPublishResponses = singlePublishRequest ? 1 : numEventsToPublish;
         final List<PublishResponse> publishResponses = Lists.newArrayListWithExpectedSize(numExpectedPublishResponses);
         AtomicInteger failed = new AtomicInteger(0);
         StreamObserver<PublishResponse> pubObserver = getDefaultPublishStreamObserver(finishLatchRef,
@@ -92,21 +92,29 @@ public class PublishStream extends CommonContext {
     private void validatePublishResponse(CountDownLatch finishLatch,
                                                int expectedResponseCount, List<PublishResponse> publishResponses, AtomicInteger failed, int expectedNumEventsPublished) throws Exception {
         String exceptionMsg;
+        boolean failedPublish = false;
         if (!finishLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            failedPublish = true;
             exceptionMsg = "[ERROR] publishStream timed out after: " + TIMEOUT_SECONDS + "sec";
             logger.error(exceptionMsg);
         }
 
         if (expectedResponseCount != publishResponses.size()) {
-            exceptionMsg = "[ERROR] PublishStream received: " + publishResponses.size() + " PublishResponse instead of expected "
+            failedPublish = true;
+            exceptionMsg = "[ERROR] PublishStream received: " + publishResponses.size() + " PublishResponses instead of expected "
                     + expectedResponseCount;
             logger.error(exceptionMsg);
         }
 
         if (failed.get() != 0) {
+            failedPublish = true;
             exceptionMsg = "[ERROR] Failed to publish all events. " + failed + " failed out of "
                     + expectedNumEventsPublished;
             logger.error(exceptionMsg);
+        }
+
+        if (failedPublish) {
+            throw new RuntimeException("Failed to publish events.");
         }
     }
 
@@ -218,11 +226,13 @@ public class PublishStream extends CommonContext {
             public void onError(Throwable t) {
                 logger.error("[ERROR] Unexpected error status: " + Status.fromThrowable(t));
                 printStatusRuntimeException("Error during PublishStream", (Exception) t);
+                finishLatchRef.get().countDown();
             }
 
             @Override
             public void onCompleted() {
-                logger.info("Server closed publish stream with " + busTopicName + " for tenant " + tenantGuid);
+                logger.info("Successfully published events for topic " + busTopicName + " for tenant " + tenantGuid);
+                finishLatchRef.get().countDown();
             }
         };
     }
