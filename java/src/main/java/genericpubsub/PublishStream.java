@@ -213,7 +213,7 @@ public class PublishStream extends CommonContext {
                         logger.error("[ERROR] Publishing event with correlationKey: " + publishResult.getCorrelationKey() +
                                 " failed with error: " + publishResult.getError().getMsg());
                     } else {
-                        logger.info("Event published successful with correlationKey: " + publishResult.getCorrelationKey());
+                        logger.info("Event published with correlationKey: " + publishResult.getCorrelationKey());
                         lastPublishedReplayId = publishResult.getReplayId();
                     }
                 }

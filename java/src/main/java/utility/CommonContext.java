@@ -185,7 +185,7 @@ public class CommonContext implements AutoCloseable {
     public GenericRecord createEventMessage(Schema schema) {
         // Update CreatedById with the appropriate User Id from your org.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
-                .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", "1")
+                .set("CreatedById", "<User_Id>").set("Order_Number__c", "1")
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
 
@@ -202,7 +202,7 @@ public class CommonContext implements AutoCloseable {
     public GenericRecord createEventMessage(Schema schema, final int counter) {
         // Update CreatedById with the appropriate User Id from your org.
         return new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
-                .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", String.valueOf(counter+1))
+                .set("CreatedById", "<User_Id>").set("Order_Number__c", String.valueOf(counter+1))
                 .set("City__c", "Los Angeles").set("Amount__c", 35.0).build();
     }
 
@@ -216,7 +216,7 @@ public class CommonContext implements AutoCloseable {
         List<GenericRecord> events = new ArrayList<>();
         for (int i=0; i<numEvents; i++) {
             events.add(new GenericRecordBuilder(schema).set("CreatedDate", System.currentTimeMillis())
-                    .set("CreatedById", "0055f000005mc66AAA").set("Order_Number__c", orderNumbers[i % 5])
+                    .set("CreatedById", "<User_Id>").set("Order_Number__c", orderNumbers[i % 5])
                     .set("City__c", cities[i % 5]).set("Amount__c", amounts[i % 5]).build());
         }
 
