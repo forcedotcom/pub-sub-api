@@ -68,6 +68,11 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         serverStream.onNext(builder.build());
     }
 
+    /**
+     * Helps keep the subscription active by sending FetchRequests at regular intervals.
+     *
+     * @param numOfRequestedEvents
+     */
     private void fetchMore(int numOfRequestedEvents) {
         logger.info("Fetching more events: {}", numOfRequestedEvents);
         ManagedFetchRequest fetchRequest = ManagedFetchRequest
@@ -77,6 +82,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         serverStream.onNext(fetchRequest);
     }
 
+    /**
+     * Helper function to process the events received.
+     */
     private void processEvent(ManagedFetchResponse response) throws IOException {
         if (response.getEventsCount() > 0) {
             for (ConsumerEvent event : response.getEventsList()) {
@@ -95,6 +103,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         }
     }
 
+    /**
+     * Helper function to commit the latest replay received from the server.
+     */
     private void doCommitReplay(ByteString commitReplayId) {
         String newKey =UUID.randomUUID().toString();
         ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder().setNumRequested(1);
@@ -108,6 +119,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         serverStream.onNext(fetchRequestBuilder.build());
     }
 
+    /**
+     * Helper function to inspect the status of a commitRequest.
+     */
     private void checkCommitResponse(@NotNull ManagedFetchResponse fetchResponse) {
         CommitReplayResponse ce = fetchResponse.getCommitResponse();
         try {
@@ -130,7 +144,6 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         if (fetchResponse.hasCommitResponse()) {
             checkCommitResponse(fetchResponse);
         }
-
         try {
             processEvent(fetchResponse);
         } catch (IOException e) {
@@ -170,6 +183,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         serverOnCompletedLatch.countDown();
     }
 
+    /**
+     * Helper function to get the schema of an event if it does not already exist in the schema cache.
+     */
     private Schema getSchema(String schemaId) {
         return schemaCache.computeIfAbsent(schemaId, id -> {
             SchemaRequest request = SchemaRequest.newBuilder().setSchemaId(id).build();
@@ -178,6 +194,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         });
     }
 
+    /**
+     * Helper function to decode the payload from the stream.
+     */
     public static GenericRecord deserialize(Schema schema, ByteString payload) throws IOException {
         DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema);
         ByteArrayInputStream in = new ByteArrayInputStream(payload.toByteArray());
@@ -185,6 +204,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         return reader.read(null, decoder);
     }
 
+    /**
+     * Closes the connection when the task is complete.
+     */
     @Override
     public synchronized void close() {
         if (Objects.nonNull(serverStream)) {
@@ -202,12 +224,19 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         super.close();
     }
 
+    /**
+     * Helper function to terminate the client on errors.
+     */
     private synchronized void abort(Exception e) {
         serverStream.onError(e);
         isActive = false;
         this.notifyAll();
     }
 
+    /**
+     *  function illustrates the statues of the stream on a fixed intervals.
+     *  This is for demonstration purposes only, and not to be used in a production setting.
+     */
     public synchronized boolean waitForEvents(int numEvents) {
         return waitForEventsWithMaxTimeOut(numEvents, Integer.MAX_VALUE);
     }
