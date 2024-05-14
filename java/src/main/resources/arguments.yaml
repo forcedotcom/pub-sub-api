@@ -12,14 +12,14 @@ PUBSUB_HOST: api.pubsub.salesforce.com
 # Pub/Sub API Host
 PUBSUB_PORT: 7443
 # Your Salesforce Login URL
-LOGIN_URL: null
+LOGIN_URL: https://login.salesforce.com
 
 # For authentication, you can use either username/password or accessToken/tenantId types.
 # Either one of the combinations is required. Please specify `null` values to the unused type.
 # Your Salesforce Username
-USERNAME: null
+USERNAME: eventbusapitest@salesforce.com
 # Your Salesforce Password
-PASSWORD: null
+PASSWORD: test1234567
 # Your Salesforce org Tenant ID
 TENANT_ID: null
 # Your Salesforce Session Token
@@ -43,3 +43,8 @@ NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 REPLAY_PRESET: null
 # Replay ID in ByteString
 REPLAY_ID: null
+
+# Managed subscribe RPC params
+# For ManagedSubscribe example, either supply developer name or the managed event entity id
+DEVELOPER_NAME: null
+MANAGED_EVENT_ID: null

@@ -88,7 +88,7 @@ message PublishResult {
   // Publish error if any
   Error error = 2;
   // Correlation key of the ProducerEvent
-  string correlationKey = 3;
+  string correlation_key = 3;
 }
 
 // Contains error information for an error that an RPC method returns.
@@ -103,6 +103,8 @@ message Error {
 enum ErrorCode {
   UNKNOWN = 0;
   PUBLISH = 1;
+  // ErrorCode for unrecoverable commit errors.
+  COMMIT = 2;
 }
 
 /*
@@ -221,6 +223,75 @@ message PublishResponse {
   string rpc_id = 3;
 }
 
+/* EXPERIMENTAL: This API might be changed in backward-incompatible
+* ways and is not recommended for production use. It is not subject to any
+* SLA or deprecation policy.
+*/
+message ManagedFetchRequest {
+  /*
+    * Managed subscription ID or developer name. This value corresponds to the
+    * ID or developer name of the ManagedEventSubscription Tooling API record.
+    * This value is consumed as part of the first ManagedFetchRequest only.
+    * The subscription_id cannot change in subsequent ManagedFetchRequests
+    * within the same subscribe stream, but can be omitted for efficiency.
+    */
+  string subscription_id = 1;
+  string developer_name = 2;
+  /*
+   * Number of events a client is ready to accept. Each subsequent FetchRequest informs the server
+   * of additional processing capacity available on the client side. There is no guarantee of equal number of
+   * FetchResponse messages to be sent back. There is not necessarily a correspondence between
+   * number of requested events in FetchRequest and the number of events returned in subsequent
+   * FetchResponses.
+   */
+  int32 num_requested = 3;
+  // For internal Salesforce use only.
+  string auth_refresh = 4;
+  CommitReplayRequest commit_replay_id_request = 5;
+
+}
+
+/* EXPERIMENTAL: This API might be changed in backward-incompatible
+* ways and is not recommended for production use. It is not subject to any
+* SLA or deprecation policy.
+*/
+message ManagedFetchResponse {
+  // Received events for subscription for client consumption
+  repeated ConsumerEvent events = 1;
+  // Latest replay ID of a subscription.
+  bytes latest_replay_id = 2;
+  // RPC ID used to trace errors.
+  string rpc_id = 3;
+  // Number of remaining events to be delivered to the client for a Subscribe RPC call.
+  int32 pending_num_requested = 4;
+  // commit response
+  CommitReplayResponse commit_response = 5;
+}
+
+/* EXPERIMENTAL: This API might be changed in backward-incompatible
+* ways and is not recommended for production use. It is not subject to any
+* SLA or deprecation policy.
+*/
+message CommitReplayRequest {
+  // commit_request_id to identify commit responses
+  string commit_request_id = 1;
+  // replayId to commit
+  bytes replay_id = 2;
+}
+
+/* EXPERIMENTAL: This API might be changed in backward-incompatible
+* ways and is not recommended for production use. It is not subject to any
+* SLA or deprecation policy.
+*/
+message CommitReplayResponse {
+  // commit_request_id to identify commit responses
+  string commit_request_id = 1;
+  // replayId that may have been committed
+  bytes replay_id = 2;
+  // for failed commits
+  Error error = 3;
+}
+
 /*
  * The Pub/Sub API provides a single interface for publishing and subscribing to platform events, including real-time
  * event monitoring events, and change data capture events. The Pub/Sub API is a gRPC API that is based on HTTP/2.
@@ -305,6 +376,14 @@ service PubSub {
    * it must make a new PublishStream call to resume publishing.
    */
   rpc PublishStream (stream PublishRequest) returns (stream PublishResponse);
+
+  /*
+   * Same as Subscribe, but for Managed Subscribtions clients.
+   * EXPERIMENTAL: This feature is part of a closed alpha release. This
+   * API might be changed in backward-incompatible ways and is not recommended
+   * for production use. It is not subject to any SLA or deprecation policy.
+   */
+  rpc ManagedSubscribe (stream ManagedFetchRequest) returns (stream ManagedFetchResponse);
 }
 
 // Style guide: https://developers.google.com/protocol-buffers/docs/style
