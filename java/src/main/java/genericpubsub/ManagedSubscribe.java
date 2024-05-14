@@ -107,15 +107,16 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
      * Helper function to commit the latest replay received from the server.
      */
     private void doCommitReplay(ByteString commitReplayId) {
+        int numRequested = 1;
         String newKey =UUID.randomUUID().toString();
-        ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder().setNumRequested(1);
+        ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder().setNumRequested(numRequested);
         CommitReplayRequest commitRequest = CommitReplayRequest.newBuilder()
                 .setCommitRequestId(newKey)
                 .setReplayId(commitReplayId)
                 .build();
         fetchRequestBuilder.setCommitReplayIdRequest(commitRequest);
 
-        logger.info("Sending commitRequest with CommitReplayRequest ID: {}", newKey);
+        logger.info("Sending commitRequest with numRequested {} , CommitReplayRequest ID: {}", numRequested , newKey);
         serverStream.onNext(fetchRequestBuilder.build());
     }
 
@@ -140,6 +141,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     public void onNext(ManagedFetchResponse fetchResponse) {
         int batchSize = fetchResponse.getEventsList().size();
         logger.info("ManagedFetchResponse Batch of {} events pending requested: {}", batchSize, fetchResponse.getPendingNumRequested());
+        logger.info("RPC ID: {}", fetchResponse.getRpcId());
 
         if (fetchResponse.hasCommitResponse()) {
             checkCommitResponse(fetchResponse);
