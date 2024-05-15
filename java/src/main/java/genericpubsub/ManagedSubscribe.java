@@ -116,7 +116,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
                 .build();
         fetchRequestBuilder.setCommitReplayIdRequest(commitRequest);
 
-        logger.info("Sending commitRequest with numRequested {} , CommitReplayRequest ID: {}", numRequested , newKey);
+        logger.info("Sending CommitRequest with numRequested {} , CommitReplayRequest ID: {}", numRequested , newKey);
         serverStream.onNext(fetchRequestBuilder.build());
     }
 
@@ -140,7 +140,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     @Override
     public void onNext(ManagedFetchResponse fetchResponse) {
         int batchSize = fetchResponse.getEventsList().size();
-        logger.info("ManagedFetchResponse Batch of {} events pending requested: {}", batchSize, fetchResponse.getPendingNumRequested());
+        logger.info("ManagedFetchResponse batch of {} events pending requested: {}", batchSize, fetchResponse.getPendingNumRequested());
         logger.info("RPC ID: {}", fetchResponse.getRpcId());
 
         if (fetchResponse.hasCommitResponse()) {
