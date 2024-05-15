@@ -78,8 +78,8 @@ public class ExampleConfigurations {
             this.replayPreset = ReplayPreset.LATEST;
         }
 
-        this.developerName = obj.get("DEVELOPER_NAME") == null ? null : obj.get("DEVELOPER_NAME").toString();
-        this.managedSubscriptionId = obj.get("MANAGED_EVENT_ID") == null ? null : obj.get("MANAGED_EVENT_ID").toString();
+        this.developerName = obj.get("MANAGED_SUB_DEVELOPER_NAME") == null ? null : obj.get("MANAGED_SUB_DEVELOPER_NAME").toString();
+        this.managedSubscriptionId = obj.get("MANAGED_SUB_ID") == null ? null : obj.get("MANAGED_SUB_ID").toString();
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl,
