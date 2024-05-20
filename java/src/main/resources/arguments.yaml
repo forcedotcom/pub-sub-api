@@ -43,3 +43,8 @@ NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 REPLAY_PRESET: null
 # Replay ID in ByteString
 REPLAY_ID: null
+
+# ManagedSubscribe RPC parameters
+# For ManagedSubscribe.java, either supply the developer name or the ID of ManagedEventSubscription
+MANAGED_SUB_DEVELOPER_NAME: null
+MANAGED_SUB_ID: null

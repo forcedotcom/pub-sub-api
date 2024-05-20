@@ -31,11 +31,13 @@ public class ExampleConfigurations {
     private Boolean providedLoginUrl;
     private ReplayPreset replayPreset;
     private ByteString replayId;
+    private String managedSubscriptionId;
+    private String developerName;
 
     public ExampleConfigurations() {
         this(null, null, null, null, null,
                 null, null, null, 5, false, 5,
-                false, false, ReplayPreset.LATEST, null);
+                false, false, ReplayPreset.LATEST, null, null, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
 
@@ -76,18 +78,20 @@ public class ExampleConfigurations {
             this.replayPreset = ReplayPreset.LATEST;
         }
 
+        this.developerName = obj.get("MANAGED_SUB_DEVELOPER_NAME") == null ? null : obj.get("MANAGED_SUB_DEVELOPER_NAME").toString();
+        this.managedSubscriptionId = obj.get("MANAGED_SUB_ID") == null ? null : obj.get("MANAGED_SUB_ID").toString();
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl,
                                  String pubsubHost, int pubsubPort, String topic) {
         this(username, password, loginUrl, null, null, pubsubHost, pubsubPort, topic,
-                5, false, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null);
+                5, false, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null, null, null);
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
                                  String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,Boolean singlePublishRequest,
                                  Integer numberOfEventsToSubscribeInEachFetchRequest, Boolean plaintextChannel, Boolean providedLoginUrl,
-                                 ReplayPreset replayPreset, ByteString replayId) {
+                                 ReplayPreset replayPreset, ByteString replayId, String devName, String managedSubId) {
         this.username = username;
         this.password = password;
         this.loginUrl = loginUrl;
@@ -102,6 +106,8 @@ public class ExampleConfigurations {
         this.providedLoginUrl = providedLoginUrl;
         this.replayPreset = replayPreset;
         this.replayId = replayId;
+        this.developerName = devName;
+        this.managedSubscriptionId = managedSubId;
     }
 
     public String getUsername() {
@@ -223,6 +229,23 @@ public class ExampleConfigurations {
     public void setReplayId(ByteString replayId) {
         this.replayId = replayId;
     }
+
+    public String getManagedSubscriptionId() {
+        return managedSubscriptionId;
+    }
+
+    public void setManagedSubscriptionId(String managedSubscriptionId) {
+        this.managedSubscriptionId = managedSubscriptionId;
+    }
+
+    public String getDeveloperName() {
+        return developerName;
+    }
+
+    public void setDeveloperName(String developerName) {
+        this.developerName = developerName;
+    }
+
 
     /**
      * NOTE: replayIds are meant to be opaque (See docs: https://developer.salesforce.com/docs/platform/pub-sub-api/guide/intro.html)
