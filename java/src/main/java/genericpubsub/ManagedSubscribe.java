@@ -97,8 +97,8 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
             logger.info("Processed batch of {} event(s)", response.getEventsList().size());
         }
 
-        // Commit the replay after processing batch of events
-        if (!response.hasCommitResponse() && response.getEventsCount() > 0) {
+        // Commit the replay after processing batch of events or commit the latest replay on an empty batch
+        if (!response.hasCommitResponse()) {
             doCommitReplay(response.getLatestReplayId());
         }
     }
