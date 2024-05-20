@@ -19,7 +19,6 @@ import io.grpc.stub.StreamObserver;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
-import org.jetbrains.annotations.NotNull;
 import utility.CommonContext;
 import utility.ExampleConfigurations;
 
@@ -123,7 +122,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     /**
      * Helper function to inspect the status of a commitRequest.
      */
-    private void checkCommitResponse(@NotNull ManagedFetchResponse fetchResponse) {
+    private void checkCommitResponse(ManagedFetchResponse fetchResponse) {
         CommitReplayResponse ce = fetchResponse.getCommitResponse();
         try {
             if (ce.hasError()) {
