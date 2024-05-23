@@ -64,12 +64,6 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
             logger.warn("No ID or developer name specified");
         }
 
-        if (Objects.nonNull(developerName)) {
-            builder.setDeveloperName(developerName);
-        }
-        if (Objects.nonNull(managedSubscriptionId)) {
-            builder.setSubscriptionId(managedSubscriptionId);
-        }
         serverStream.onNext(builder.build());
 
         // Thread being blocked here for demonstration of this specific example. Blocking the thread in production is not recommended.
