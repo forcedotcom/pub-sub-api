@@ -1,24 +1,20 @@
 package genericpubsub;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 
 import com.google.protobuf.ByteString;
 import com.salesforce.eventbus.protobuf.*;
 
 import io.grpc.stub.StreamObserver;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DecoderFactory;
 import utility.CommonContext;
 import utility.ExampleConfigurations;
 
@@ -38,14 +34,14 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     private StreamObserver<ManagedFetchRequest> serverStream;
     private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private final CountDownLatch serverOnCompletedLatch = new CountDownLatch(1);
-    private boolean isActive;
-    private int receivedEvents = 0;
+    public static AtomicBoolean isActive = new AtomicBoolean(false);
+    private AtomicInteger receivedEvents = new AtomicInteger(0);
     private String developerName;
     private String managedSubscriptionId;
 
     public ManagedSubscribe(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
-        this.isActive= true;
+        isActive.set(true);
         this.managedSubscriptionId = exampleConfigurations.getManagedSubscriptionId();
         this.developerName = exampleConfigurations.getDeveloperName();
         BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
@@ -58,13 +54,23 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         serverStream = asyncStub.managedSubscribe(this);
         ManagedFetchRequest.Builder builder = ManagedFetchRequest.newBuilder().setNumRequested(BATCH_SIZE);
 
-        if (Objects.nonNull(developerName)) {
-            builder.setDeveloperName(developerName);
-        }
         if (Objects.nonNull(managedSubscriptionId)) {
             builder.setSubscriptionId(managedSubscriptionId);
+            logger.info("Starting managed subscription with ID {}", managedSubscriptionId);
+        } else if (Objects.nonNull(developerName)) {
+            builder.setDeveloperName(developerName);
+            logger.info("Starting managed subscription with developer name {}", developerName);
+        } else {
+            logger.warn("No ID or developer name specified");
         }
+
         serverStream.onNext(builder.build());
+
+        // Thread being blocked here for demonstration of this specific example. Blocking the thread in production is not recommended.
+        while(isActive.get()) {
+            waitInMillis(5_000);
+            logger.info("Subscription Active. Received a total of " + receivedEvents.get() + " events.");
+        }
     }
 
     /**
@@ -107,7 +113,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
      */
     private void doCommitReplay(ByteString commitReplayId) {
         int numRequested = 1;
-        String newKey =UUID.randomUUID().toString();
+        String newKey = UUID.randomUUID().toString();
         ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder().setNumRequested(numRequested);
         CommitReplayRequest commitRequest = CommitReplayRequest.newBuilder()
                 .setCommitRequestId(newKey)
@@ -153,12 +159,13 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         }
 
         synchronized (this) {
-            receivedEvents += batchSize;
+            receivedEvents.addAndGet(batchSize);
             this.notifyAll();
-            if (!isActive) {
+            if (!isActive.get()) {
                 return;
             }
         }
+
         if (fetchResponse.getPendingNumRequested() == 0) {
             fetchMore(BATCH_SIZE);
         }
@@ -166,19 +173,20 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
 
     @Override
     public void onError(Throwable throwable) {
+        printStatusRuntimeException("Error during subscribe stream", (Exception) throwable);
+
         // onError from server closes stream. notify waiting thread that subscription is no longer active.
         synchronized (this) {
-            isActive = false;
+            isActive.set(false);
             this.notifyAll();
         }
-        printStatusRuntimeException("Error during subscribe stream", (Exception) throwable);
     }
 
     @Override
     public void onCompleted() {
         logger.info("Call completed by Server");
         synchronized (this) {
-            isActive = false;
+            isActive.set(false);
             this.notifyAll();
         }
         serverOnCompletedLatch.countDown();
@@ -196,24 +204,14 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     }
 
     /**
-     * Helper function to decode the payload from the stream.
-     */
-    public static GenericRecord deserialize(Schema schema, ByteString payload) throws IOException {
-        DatumReader<GenericRecord> reader = new GenericDatumReader<GenericRecord>(schema);
-        ByteArrayInputStream in = new ByteArrayInputStream(payload.toByteArray());
-        BinaryDecoder decoder = DecoderFactory.get().directBinaryDecoder(in, null);
-        return reader.read(null, decoder);
-    }
-
-    /**
      * Closes the connection when the task is complete.
      */
     @Override
     public synchronized void close() {
         if (Objects.nonNull(serverStream)) {
             try {
-                if (isActive) {
-                    isActive = false;
+                if (isActive.get()) {
+                    isActive.set(false);
                     this.notifyAll();
                     serverStream.onCompleted();
                 }
@@ -230,41 +228,22 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
      */
     private synchronized void abort(Exception e) {
         serverStream.onError(e);
-        isActive = false;
+        isActive.set(false);
         this.notifyAll();
     }
 
     /**
-     *  function illustrates the statues of the stream on a fixed intervals.
-     *  This is for demonstration purposes only, and not to be used in a production setting.
+     * Helper function to halt the current thread.
      */
-    public synchronized boolean waitForEvents(int numEvents) {
-        return waitForEventsWithMaxTimeOut(numEvents, Integer.MAX_VALUE);
-    }
-
-    public synchronized boolean waitForEventsWithMaxTimeOut(int numEvents, int timeoutInSeconds) {
-        final Instant startTime = Instant.now();
-        while (isActive && receivedEvents < numEvents) {
-            final long elapsed = Duration.between(startTime, Instant.now()).getSeconds();
-
-            if (elapsed > timeoutInSeconds) {
-                isActive = false;
-                logger.warn("Waiting for events for more than {} seconds", timeoutInSeconds);
-                return receivedEvents < numEvents;
-            }
-
+    public void waitInMillis(long duration) {
+        synchronized (this) {
             try {
-                logger.info("received {} out of {}", receivedEvents, numEvents);
-                this.wait(10_000);
+                this.wait(duration);
             } catch (InterruptedException e) {
-                logger.warn("interrupted while waiting", e);
-                break;
+                throw new RuntimeException(e);
             }
         }
-        logger.info("Total Received Events {} out of {}", receivedEvents, numEvents);
-        return receivedEvents < numEvents;
     }
-
 
     public static void main(String args[]) throws IOException  {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
@@ -273,7 +252,6 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         // order to close the resources used.
         try (ManagedSubscribe subscribe = new ManagedSubscribe(exampleConfigurations)) {
             subscribe.startManagedSubscription();
-            subscribe.waitForEvents(Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest()));
         } catch (Exception e) {
             printStatusRuntimeException("Error during ManagedSubscribe", e);
         }
