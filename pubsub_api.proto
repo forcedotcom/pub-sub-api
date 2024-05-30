@@ -223,10 +223,16 @@
    string rpc_id = 3;
  }
  
- /* EXPERIMENTAL: This API might be changed in backward-incompatible
- * ways and is not recommended for production use. It is not subject to any
- * SLA or deprecation policy.
- */
+ /*
+  * This feature is part of an open beta release and is subject to the applicable
+  * Beta Services Terms provided at Agreements and Terms
+  * (https://www.salesforce.com/company/legal/agreements/).
+  *
+  * Request for the ManagedSubscribe streaming RPC method. This request is used to:
+  * 1. Establish the initial managed subscribe stream.
+  * 2. Request more events from the subscription stream.
+  * 3. Commit a Replay ID using CommitReplayRequest.
+  */
  message ManagedFetchRequest {
    /*
      * Managed subscription ID or developer name. This value corresponds to the
@@ -251,10 +257,14 @@
    
  }
  
- /* EXPERIMENTAL: This API might be changed in backward-incompatible
- * ways and is not recommended for production use. It is not subject to any
- * SLA or deprecation policy.
- */
+ /*
+  * This feature is part of an open beta release and is subject to the applicable
+  * Beta Services Terms provided at Agreements and Terms
+  * (https://www.salesforce.com/company/legal/agreements/).
+  *
+  * Response for the ManagedSubscribe streaming RPC method. This can return
+  * ConsumerEvent(s) or CommitReplayResponse along with other metadata.
+  */
  message ManagedFetchResponse {
    // Received events for subscription for client consumption
    repeated ConsumerEvent events = 1;
@@ -268,10 +278,14 @@
    CommitReplayResponse commit_response = 5;
  }
  
- /* EXPERIMENTAL: This API might be changed in backward-incompatible
- * ways and is not recommended for production use. It is not subject to any
- * SLA or deprecation policy.
- */
+ /*
+  * This feature is part of an open beta release and is subject to the applicable
+  * Beta Services Terms provided at Agreements and Terms
+  * (https://www.salesforce.com/company/legal/agreements/).
+  *
+  * Request to commit a Replay ID for the last processed event or for the latest
+  * replay ID received in an empty batch of events.
+  */
  message CommitReplayRequest {
    // commit_request_id to identify commit responses
    string commit_request_id = 1;
@@ -279,17 +293,25 @@
    bytes replay_id = 2;
  }
  
- /* EXPERIMENTAL: This API might be changed in backward-incompatible
- * ways and is not recommended for production use. It is not subject to any
- * SLA or deprecation policy.
- */
+ /*
+  * This feature is part of an open beta release and is subject to the applicable
+  * Beta Services Terms provided at Agreements and Terms
+  * (https://www.salesforce.com/company/legal/agreements/).
+  *
+  * There is no guaranteed 1:1 CommitReplayRequest to CommitReplayResponse.
+  * N CommitReplayRequest(s) can get compressed in a batch resulting in a single
+  * CommitReplayResponse which reflects the latest values of last
+  * CommitReplayRequest in that batch.
+  */
  message CommitReplayResponse {
-   // commit_request_id to identify commit responses
+   // commit_request_id to identify commit responses.
    string commit_request_id = 1;
    // replayId that may have been committed
    bytes replay_id = 2;
    // for failed commits
    Error error = 3;
+   // time when server received request in epoch ms
+   int64 process_time = 4;
  }
  
  /*
@@ -378,10 +400,12 @@
    rpc PublishStream (stream PublishRequest) returns (stream PublishResponse);
  
    /*
-    * Same as Subscribe, but for Managed Subscribtions clients.
-    * EXPERIMENTAL: This feature is part of a closed alpha release. This
-    * API might be changed in backward-incompatible ways and is not recommended
-    * for production use. It is not subject to any SLA or deprecation policy.
+    * This feature is part of an open beta release and is subject to the applicable
+    * Beta Services Terms provided at Agreements and Terms
+    * (https://www.salesforce.com/company/legal/agreements/).
+    *
+    * Same as Subscribe, but for Managed Subscription clients.
+    * This feature is part of an open beta release.
     */
    rpc ManagedSubscribe (stream ManagedFetchRequest) returns (stream ManagedFetchResponse);
  }
