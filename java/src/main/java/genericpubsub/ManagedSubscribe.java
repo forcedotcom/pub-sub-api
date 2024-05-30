@@ -112,7 +112,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
      * Helper function to commit the latest replay received from the server.
      */
     private void doCommitReplay(ByteString commitReplayId) {
-        String newKey =UUID.randomUUID().toString();
+        String newKey = UUID.randomUUID().toString();
         ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder();
         CommitReplayRequest commitRequest = CommitReplayRequest.newBuilder()
                 .setCommitRequestId(newKey)
@@ -120,7 +120,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
                 .build();
         fetchRequestBuilder.setCommitReplayIdRequest(commitRequest);
 
-        logger.info("Sending CommitRequest with , CommitReplayRequest ID: {}" , newKey);
+        logger.info("Sending CommitRequest with CommitReplayRequest ID: {}" , newKey);
         serverStream.onNext(fetchRequestBuilder.build());
     }
 
