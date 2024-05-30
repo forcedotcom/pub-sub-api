@@ -112,16 +112,15 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
      * Helper function to commit the latest replay received from the server.
      */
     private void doCommitReplay(ByteString commitReplayId) {
-        int numRequested = 1;
         String newKey = UUID.randomUUID().toString();
-        ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder().setNumRequested(numRequested);
+        ManagedFetchRequest.Builder fetchRequestBuilder = ManagedFetchRequest.newBuilder();
         CommitReplayRequest commitRequest = CommitReplayRequest.newBuilder()
                 .setCommitRequestId(newKey)
                 .setReplayId(commitReplayId)
                 .build();
         fetchRequestBuilder.setCommitReplayIdRequest(commitRequest);
 
-        logger.info("Sending CommitRequest with numRequested {} , CommitReplayRequest ID: {}", numRequested , newKey);
+        logger.info("Sending CommitRequest with CommitReplayRequest ID: {}" , newKey);
         serverStream.onNext(fetchRequestBuilder.build());
     }
 
@@ -132,10 +131,12 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         CommitReplayResponse ce = fetchResponse.getCommitResponse();
         try {
             if (ce.hasError()) {
-                logger.info("Failed Commit CommitRequestID: {} with error: {}", ce.getCommitRequestId(), ce.getError().getMsg());
+                logger.info("Failed Commit CommitRequestID: {} with error: {} with process time: {}",
+                        ce.getCommitRequestId(), ce.getError().getMsg(), ce.getProcessTime());
                 return;
             }
-            logger.info("Successfully committed replay with CommitRequestId: {}", ce.getCommitRequestId());
+            logger.info("Successfully committed replay with CommitRequestId: {} with process time: {}",
+                    ce.getCommitRequestId(), ce.getProcessTime());
         } catch (Exception e) {
             logger.warn(e.getMessage());
             abort(new RuntimeException("Client received error. Closing Call." + e));
