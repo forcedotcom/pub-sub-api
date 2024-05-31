@@ -1,7 +1,7 @@
 # Pub/Sub API Java Examples
 
 ## Overview
-This directory contains some Java examples that can be used with the Pub/Sub API. These examples range from generic Publish and Subscribe, processing CustomEventHeaders in change events and also a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
+This directory contains some Java examples that can be used with the Pub/Sub API. These examples range from generic Publish, Subscribe, ManagedSubscribe (beta), processing CustomEventHeaders in change events, and a specific example of updating the Salesforce Account standard object. It is important to note that these examples are not performance tested nor are they production ready. They are meant to be used as a learning resource or a starting point to understand the flows of each of the Remote Procedure Calls (RPCs) of Pub/Sub API. There are some limitations to these examples as well mentioned below.
 
 ## Project Structure
 In the `src/main` directory of the project, you will find several sub-directories as follows:
@@ -37,7 +37,11 @@ In the `src/main` directory of the project, you will find several sub-directorie
        * `PUBSUB_PORT`: Specify the Pub/Sub API port to be used (usually 7443).
        * `LOGIN_URL`: Specify the login url of the Salesforce org being used to run the examples.
        * `USERNAME` & `PASSWORD`: For authentication via username and password, you will need to specify the username and password of the Salesforce org. 
-       * `ACCESS_TOKEN` & `TENANT_ID`: For authentication via session token an tenant ID, you will need to specify the sessionToken and tenant ID of the Salesforce org.
+       * `ACCESS_TOKEN` & `TENANT_ID`: For authentication via session token and tenant ID, you will need to specify the sessionToken and tenant ID of the Salesforce org.
+       *  When using managed event subscriptions (beta), one of these configurations is required.
+          * `MANAGED_SUB_DEVELOPER_NAME`: Specify the developer name of ManagedEventSubscription. This parameter is used in ManagedSubscribe.java.
+          * `MANAGED_SUB_ID`: Specify the ID of the ManagedEventSubscription Tooling API record. This parameter is used in ManagedSubscribe.java.
+
    2. Optional Parameters:
        * `TOPIC`: Specify the topic for which you wish to publish/subscribe. 
        * `NUMBER_OF_EVENTS_TO_PUBLISH`: Specify the number of events to publish while using the PublishStream RPC.
@@ -54,8 +58,8 @@ In the `src/main` directory of the project, you will find several sub-directorie
 
 ## Implementation
 - This repo can be used as a reference point for clients looking to create a Java app to integrate with Pub/Sub API. Note that the project structure and the examples included in this repo are intended for demo purposes only and clients are free to implement their own Java apps in any way they see fit.
-- The Generic Subscribe RPC example creates a long-lived subscription. After all requested events are received, it sends a new `FetchRequest` to keep the subscription alive and the client listening to new events.
-- The Generic Subscribe RPC example demonstrates a basic flow control strategy where a new `FetchRequest` is sent only after the requested number of events in the previous `FetchRequest(s)` are received. Custom flow control strategies can be implemented as needed. More info on flow control available [here](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html).
+- The Generic Subscribe and ManagedSubscribe (beta) RPC examples create a long-lived subscription. After all requested events are received, Subscribe sends a new `FetchRequest` and ManagedSubscribe sends a new `ManagedFetchRequest` to keep the subscription alive and the client listening to new events.
+- The Generic Subscribe and ManagedSubscribe (beta) RPC examples demonstrate a basic flow control strategy where a new `FetchRequest` or `ManagedFetchRequest` is sent only after the requested number of events in the previous requests are received. The ManagedSubscribe RPC example also shows how to commit a Replay ID by sending commit requests. Custom flow control strategies can be implemented as needed. More info on flow control available [here](https://developer.salesforce.com/docs/platform/pub-sub-api/guide/flow-control.html).
 - The Generic Subscribe RPC example demonstrates error handling. After an exception occurs, it attempts to resubscribe after the last received event by implementing Binary Exponential Backoff. The example processes events and sends the retry requests asynchronously. If the error is an invalid replay ID,  it tries to resubscribe since the earliest stored event in the event bus. See the `onError()` method in `Subscribe.java`.
 
 # Limitations
