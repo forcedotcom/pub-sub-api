@@ -39,8 +39,8 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     private String developerName;
     private String managedSubscriptionId;
 
-    public ManagedSubscribe(ExampleConfigurations exampleConfigurations) {
-        super(exampleConfigurations);
+    public ManagedSubscribe(ExampleConfigurations exampleConfigurations, final String clientTraceId) {
+        super(exampleConfigurations, clientTraceId);
         isActive.set(true);
         this.managedSubscriptionId = exampleConfigurations.getManagedSubscriptionId();
         this.developerName = exampleConfigurations.getDeveloperName();
@@ -248,10 +248,12 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
 
     public static void main(String args[]) throws IOException  {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (ManagedSubscribe subscribe = new ManagedSubscribe(exampleConfigurations)) {
+        try (ManagedSubscribe subscribe = new ManagedSubscribe(exampleConfigurations, clientTraceId)) {
             subscribe.startManagedSubscription();
         } catch (Exception e) {
             printStatusRuntimeException("Error during ManagedSubscribe", e);

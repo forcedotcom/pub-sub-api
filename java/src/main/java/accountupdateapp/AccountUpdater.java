@@ -5,6 +5,7 @@ import static accountupdateapp.AccountUpdateAppUtil.*;
 import static utility.CommonContext.*;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -42,7 +43,9 @@ public class AccountUpdater {
     public AccountUpdater(ExampleConfigurations requiredParams) {
         logger.info("Setting Up Subscriber");
         this.subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 100);
-        this.subscriber = new Subscribe(subscriberParams, getAccountUpdaterResponseObserver());
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
+        this.subscriber = new Subscribe(subscriberParams, getAccountUpdaterResponseObserver(), clientTraceId);
     }
 
     /**

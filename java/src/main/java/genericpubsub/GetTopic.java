@@ -1,6 +1,7 @@
 package genericpubsub;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import com.salesforce.eventbus.protobuf.TopicInfo;
 import com.salesforce.eventbus.protobuf.TopicRequest;
@@ -18,8 +19,8 @@ import utility.ExampleConfigurations;
  */
 public class GetTopic extends CommonContext {
 
-    public GetTopic(final ExampleConfigurations options) {
-        super(options);
+    public GetTopic(final ExampleConfigurations options, final String clientTraceId) {
+        super(options, clientTraceId);
     }
 
     private void getTopic(String topicName) {
@@ -34,10 +35,12 @@ public class GetTopic extends CommonContext {
 
     public static void main(String[] args) throws IOException {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (GetTopic example = new GetTopic(exampleConfigurations)) {
+        try (GetTopic example = new GetTopic(exampleConfigurations, clientTraceId)) {
             example.getTopic(exampleConfigurations.getTopic());
         } catch (Exception e) {
             printStatusRuntimeException("Error while Getting Topic", e);

@@ -3,6 +3,7 @@ package genericpubsub;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -28,8 +29,8 @@ public class Publish extends CommonContext {
 
     private Schema schema;
 
-    public Publish(ExampleConfigurations exampleConfigurations) {
-        super(exampleConfigurations);
+    public Publish(ExampleConfigurations exampleConfigurations, String clientTraceId) {
+        super(exampleConfigurations, clientTraceId);
         setupTopicDetails(exampleConfigurations.getTopic(), true, true);
         schema = new Schema.Parser().parse(schemaInfo.getSchemaJson());
     }
@@ -131,10 +132,12 @@ public class Publish extends CommonContext {
 
     public static void main(String[] args) throws IOException {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (Publish example = new Publish(exampleConfigurations)) {
+        try (Publish example = new Publish(exampleConfigurations, clientTraceId)) {
             example.publish();
         } catch (Exception e) {
             CommonContext.printStatusRuntimeException("Publishing events", e);

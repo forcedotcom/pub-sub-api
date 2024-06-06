@@ -1,6 +1,7 @@
 package genericpubsub;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 
@@ -22,8 +23,8 @@ import utility.ExampleConfigurations;
  */
 public class GetSchema extends CommonContext {
 
-    public GetSchema(final ExampleConfigurations options) {
-        super(options);
+    public GetSchema(final ExampleConfigurations options, String clientTraceId) {
+        super(options, clientTraceId);
     }
 
     private void getSchema(String topicName) {
@@ -49,10 +50,12 @@ public class GetSchema extends CommonContext {
 
     public static void main(String[] args) throws IOException {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (GetSchema example = new GetSchema(exampleConfigurations)) {
+        try (GetSchema example = new GetSchema(exampleConfigurations, clientTraceId)) {
             example.getSchema(exampleConfigurations.getTopic());
         } catch (Exception e) {
             printStatusRuntimeException("Getting schema", e);

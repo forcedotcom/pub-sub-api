@@ -4,6 +4,7 @@ import static accountupdateapp.AccountUpdateAppUtil.*;
 import static utility.CommonContext.*;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -44,10 +45,14 @@ public class AccountListener {
     public AccountListener(ExampleConfigurations requiredParams) {
         logger.info("Setting up the Subscriber");
         ExampleConfigurations subscriberParams = setupSubscriberParameters(requiredParams, SUBSCRIBER_TOPIC, 100);
-        this.subscriber = new Subscribe(subscriberParams, getAccountListenerResponseObserver());
+        // Generate an ID to trace requests from client side
+        String subscriberClientTraceId = UUID.randomUUID().toString();
+        this.subscriber = new Subscribe(subscriberParams, getAccountListenerResponseObserver(), subscriberClientTraceId);
         logger.info("Setting up the Publisher");
         ExampleConfigurations publisherParams = setupPublisherParameters(requiredParams, PUBLISHER_TOPIC);
-        this.publisher = new Publish(publisherParams);
+        // Generate an ID to trace requests from client side
+        String publisherClientTraceId = UUID.randomUUID().toString();
+        this.publisher = new Publish(publisherParams, publisherClientTraceId);
     }
 
     /**

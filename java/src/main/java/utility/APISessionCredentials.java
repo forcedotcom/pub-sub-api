@@ -28,18 +28,19 @@ public class APISessionCredentials extends CallCredentials {
     private String instanceURL;
     private String tenantId;
     private String token;
+    private String clientTraceId;
 
     private static final Logger log = LoggerFactory.getLogger(APISessionCredentials.class);
 
-    public APISessionCredentials(String tenantId, String instanceURL, String token) {
+    public APISessionCredentials(String tenantId, String instanceURL, String token, String clientTraceId) {
         this.instanceURL = instanceURL;
         this.tenantId = tenantId;
         this.token = token;
+        this.clientTraceId = clientTraceId;
     }
 
     @Override
     public void applyRequestMetadata(RequestInfo requestInfo, Executor executor, MetadataApplier metadataApplier) {
-        String clientTraceId = UUID.randomUUID().toString();
         log.info("Client Trace Id for current request: " + clientTraceId);
         log.debug("API session credentials applied to " + requestInfo.getMethodDescriptor());
         Metadata headers = new Metadata();
