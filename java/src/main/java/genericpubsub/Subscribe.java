@@ -2,6 +2,7 @@ package genericpubsub;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,8 +51,8 @@ public class Subscribe extends CommonContext {
     // Replay should be stored in replay store as bytes since replays are opaque.
     private volatile ByteString storedReplay;
 
-    public Subscribe(ExampleConfigurations exampleConfigurations) {
-        super(exampleConfigurations);
+    public Subscribe(ExampleConfigurations exampleConfigurations, String clientTraceid) {
+        super(exampleConfigurations, clientTraceid);
         isActive.set(true);
         this.exampleConfigurations = exampleConfigurations;
         this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
@@ -62,8 +63,9 @@ public class Subscribe extends CommonContext {
         this.retryScheduler = Executors.newScheduledThreadPool(1);
     }
 
-    public Subscribe(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
-        super(exampleConfigurations);
+    public Subscribe(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver,
+                     String clientTraceId) {
+        super(exampleConfigurations, clientTraceId);
         isActive.set(true);
         this.exampleConfigurations = exampleConfigurations;
         this.BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
@@ -312,10 +314,12 @@ public class Subscribe extends CommonContext {
 
     public static void main(String args[]) throws IOException  {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (Subscribe subscribe = new Subscribe(exampleConfigurations)) {
+        try (Subscribe subscribe = new Subscribe(exampleConfigurations, clientTraceId)) {
             subscribe.startSubscription();
         } catch (Exception e) {
             printStatusRuntimeException("Error during Subscribe", e);

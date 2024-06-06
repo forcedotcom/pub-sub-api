@@ -48,7 +48,7 @@ public class CommonContext implements AutoCloseable {
     protected SchemaInfo schemaInfo;
     protected String sessionToken;
 
-    public CommonContext(final ExampleConfigurations options) {
+    public CommonContext(final ExampleConfigurations options, final String clientTraceId) {
         String grpcHost = options.getPubsubHost();
         int grpcPort = options.getPubsubPort();
         logger.info("Using grpcHost {} and grpcPort {}", grpcHost, grpcPort);
@@ -60,7 +60,7 @@ public class CommonContext implements AutoCloseable {
         }
 
         httpClient = setupHttpClient();
-        sessionTokenService = new SessionTokenService(httpClient);
+        sessionTokenService = new SessionTokenService(httpClient, clientTraceId);
 
         callCredentials = setupCallCredentials(options);
         sessionToken = ((APISessionCredentials) callCredentials).getToken();

@@ -5,6 +5,7 @@ import static utility.EventParser.getFieldListFromBitmap;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -42,7 +43,9 @@ public class ProcessChangeEventHeader {
     public ProcessChangeEventHeader(ExampleConfigurations exampleParams) {
         logger.info("Setting Up Subscriber");
         this.subscriberParams = setupSubscriberParameters(exampleParams, exampleParams.getTopic(), 100);
-        this.subscriber = new Subscribe(subscriberParams, getProcessChangeEventHeaderResponseObserver());
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
+        this.subscriber = new Subscribe(subscriberParams, getProcessChangeEventHeaderResponseObserver(), clientTraceId);
     }
 
     private StreamObserver<FetchResponse> getProcessChangeEventHeaderResponseObserver() {

@@ -38,13 +38,15 @@ public class SessionTokenService {
 
     // HttpClient is thread safe and meant to be shared; assume callers are managing its life cycle correctly
     private final HttpClient httpClient;
+    private final String clientTraceId;
 
-    public SessionTokenService(HttpClient httpClient) {
+    public SessionTokenService(HttpClient httpClient, String clientTraceId) {
         if (httpClient == null) {
             throw new IllegalArgumentException("HTTP client cannot be null");
         }
 
         this.httpClient = httpClient;
+        this.clientTraceId = clientTraceId;
     }
 
     /**
@@ -92,7 +94,7 @@ public class SessionTokenService {
         }
 
         LOGGER.debug("created session token credentials for {} from {}", parser.organizationId, url);
-        return new APISessionCredentials(parser.organizationId, url, token);
+        return new APISessionCredentials(parser.organizationId, url, token, clientTraceId);
     }
 
     /**
@@ -104,7 +106,7 @@ public class SessionTokenService {
      * @return
      */
     public APISessionCredentials loginWithAccessToken(String loginEndpoint, String accessToken, String tenantId) {
-        return new APISessionCredentials(tenantId, loginEndpoint, accessToken);
+        return new APISessionCredentials(tenantId, loginEndpoint, accessToken, clientTraceId);
     }
 
     private static class LoginResponseParser extends DefaultHandler {

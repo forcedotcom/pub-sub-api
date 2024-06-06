@@ -41,8 +41,8 @@ public class PublishStream extends CommonContext {
 
     private ByteString lastPublishedReplayId;
 
-    public PublishStream(ExampleConfigurations exampleConfigurations) {
-        super(exampleConfigurations);
+    public PublishStream(ExampleConfigurations exampleConfigurations, String clientTraceId) {
+        super(exampleConfigurations, clientTraceId);
         setupTopicDetails(exampleConfigurations.getTopic(), true, true);
     }
 
@@ -239,10 +239,12 @@ public class PublishStream extends CommonContext {
 
     public static void main(String[] args) throws IOException {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
+        // Generate an ID to trace requests from client side
+        String clientTraceId = UUID.randomUUID().toString();
 
         // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
         // order to close the resources used.
-        try (PublishStream example = new PublishStream(exampleConfigurations)) {
+        try (PublishStream example = new PublishStream(exampleConfigurations, clientTraceId)) {
             example.publishStream(exampleConfigurations.getNumberOfEventsToPublish(),
                                   exampleConfigurations.getSinglePublishRequest());
         } catch (Exception e) {
