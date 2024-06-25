@@ -65,8 +65,10 @@ public class CommonContext implements AutoCloseable {
         callCredentials = setupCallCredentials(options);
         sessionToken = ((APISessionCredentials) callCredentials).getToken();
 
-        asyncStub = PubSubGrpc.newStub(channel).withCallCredentials(callCredentials);
-        blockingStub = PubSubGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+        Channel interceptedChannel = ClientInterceptors.intercept(channel, new XClientTraceIdClientInterceptor());
+
+        asyncStub = PubSubGrpc.newStub(interceptedChannel).withCallCredentials(callCredentials);
+        blockingStub = PubSubGrpc.newBlockingStub(interceptedChannel).withCallCredentials(callCredentials);
     }
 
     /**
