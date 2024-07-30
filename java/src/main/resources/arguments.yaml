@@ -43,6 +43,8 @@ NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 REPLAY_PRESET: null
 # Replay ID in ByteString
 REPLAY_ID: null
+# Flag to enable/disable ChangedFields processing in Subscribe and ManagedSubscribe examples for CDC events (default: false)
+PROCESS_CHANGED_FIELDS: null
 
 # ManagedSubscribe RPC parameters
 # For ManagedSubscribe.java, either supply the developer name or the ID of ManagedEventSubscription
