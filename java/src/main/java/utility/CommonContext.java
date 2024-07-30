@@ -278,12 +278,12 @@ public class CommonContext implements AutoCloseable {
                 for (String field : changedFields) {
                     logger.info(field);
                 }
-                logger.info("============================");
+                logger.info("============================\n");
             } else {
-                logger.info("No ChangedFields found");
+                logger.info("No ChangedFields found\n");
             }
         } catch (Exception e) {
-            logger.info("Trying to process on non-CDC events or no ChangedFields found.");
+            logger.info("Trying to process ChangedFields on unsupported events or no ChangedFields found. Error: " + e.getMessage() + "\n");
         }
     }
 
