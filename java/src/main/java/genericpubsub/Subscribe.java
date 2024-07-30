@@ -49,6 +49,7 @@ public class Subscribe extends CommonContext {
     private final ScheduledExecutorService retryScheduler;
     // Replay should be stored in replay store as bytes since replays are opaque.
     private volatile ByteString storedReplay;
+    private final boolean processChangedFields;
 
     public Subscribe(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
@@ -60,6 +61,7 @@ public class Subscribe extends CommonContext {
         this.replayPreset = exampleConfigurations.getReplayPreset();
         this.customReplayId = exampleConfigurations.getReplayId();
         this.retryScheduler = Executors.newScheduledThreadPool(1);
+        this.processChangedFields = exampleConfigurations.getProcessChangedFields();
     }
 
     public Subscribe(ExampleConfigurations exampleConfigurations, StreamObserver<FetchResponse> responseStreamObserver) {
@@ -72,6 +74,7 @@ public class Subscribe extends CommonContext {
         this.replayPreset = exampleConfigurations.getReplayPreset();
         this.customReplayId = exampleConfigurations.getReplayId();
         this.retryScheduler = Executors.newScheduledThreadPool(1);
+        this.processChangedFields = exampleConfigurations.getProcessChangedFields();
     }
 
     /**
@@ -246,6 +249,9 @@ public class Subscribe extends CommonContext {
         this.storedReplay = ce.getReplayId();
         GenericRecord record = deserialize(writerSchema, ce.getEvent().getPayload());
         logger.info("Received event with payload: " + record.toString() + " with schema name: " + writerSchema.getName());
+        if (processChangedFields) {
+            processAndPrintChangedFields(writerSchema, record);
+        }
     }
 
     /**
