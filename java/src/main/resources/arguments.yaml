@@ -26,7 +26,7 @@ TENANT_ID: null
 ACCESS_TOKEN: null
 
 # =========================
-# Optional configurations:
+# Optional Configurations:
 # =========================
 # Topic to publish/subscribe to (default: /event/Order_Event__e)
 TOPIC: null
