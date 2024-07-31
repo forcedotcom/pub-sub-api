@@ -252,7 +252,7 @@ public class Subscribe extends CommonContext {
         if (processChangedFields) {
             // This example expands the changedFields bitmap field in ChangeEventHeader.
             // To expand the other bitmap fields, i.e., diffFields and nulledFields, replicate or modify this code.
-            processAndPrintChangedFields(writerSchema, record, "changedFields");
+            processAndPrintBitmapFields(writerSchema, record, "changedFields");
         }
     }
 

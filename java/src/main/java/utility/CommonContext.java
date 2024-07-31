@@ -276,7 +276,7 @@ public class CommonContext implements AutoCloseable {
      * @param bitmapField
      * @return
      */
-    public static void processAndPrintChangedFields(Schema schema, GenericRecord record, String bitmapField) {
+    public static void processAndPrintBitmapFields(Schema schema, GenericRecord record, String bitmapField) {
         String bitmapFieldPascal = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, bitmapField);
         try {
             List<String> changedFields = getFieldListFromBitmap(schema,
