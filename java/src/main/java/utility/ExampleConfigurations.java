@@ -63,8 +63,8 @@ public class ExampleConfigurations {
                 false : Boolean.parseBoolean(obj.get("SINGLE_PUBLISH_REQUEST").toString());
         this.numberOfEventsToSubscribeInEachFetchRequest = obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST").toString());
-        this.processChangedFields = obj.get("PROCESS_CHANGED_FIELDS") == null ?
-                false : Boolean.parseBoolean(obj.get("PROCESS_CHANGED_FIELDS").toString());
+        this.processChangedFields = obj.get("PROCESS_CHANGE_EVENT_HEADER_FIELDS") == null ?
+                false : Boolean.parseBoolean(obj.get("PROCESS_CHANGE_EVENT_HEADER_FIELDS").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
         this.providedLoginUrl = obj.get("USE_PROVIDED_LOGIN_URL") != null && Boolean.parseBoolean(obj.get("USE_PROVIDED_LOGIN_URL").toString());
 

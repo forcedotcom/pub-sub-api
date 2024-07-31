@@ -20,6 +20,7 @@ import org.eclipse.jetty.client.HttpProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CaseFormat;
 import com.google.protobuf.ByteString;
 import com.salesforce.eventbus.protobuf.*;
 
@@ -267,23 +268,33 @@ public class CommonContext implements AutoCloseable {
         return reader.read(null, decoder);
     }
 
-    public static void processAndPrintChangedFields(Schema writerSchema, GenericRecord record) throws IOException {
+    /**
+     * Helper function to process and print bitmap fields
+     *
+     * @param schema
+     * @param record
+     * @param bitmapField
+     * @return
+     */
+    public static void processAndPrintChangedFields(Schema schema, GenericRecord record, String bitmapField) {
+        String bitmapFieldPascal = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, bitmapField);
         try {
-            List<String> changedFields = getFieldListFromBitmap(writerSchema,
-                    (GenericData.Record) record.get("ChangeEventHeader"), "changedFields");
+            List<String> changedFields = getFieldListFromBitmap(schema,
+                    (GenericData.Record) record.get("ChangeEventHeader"), bitmapField);
             if (!changedFields.isEmpty()) {
                 logger.info("============================");
-                logger.info("       Changed Fields       ");
+                logger.info("       " + bitmapFieldPascal + "       ");
                 logger.info("============================");
                 for (String field : changedFields) {
                     logger.info(field);
                 }
                 logger.info("============================\n");
             } else {
-                logger.info("No ChangedFields found\n");
+                logger.info("No " + bitmapFieldPascal + " found\n");
             }
         } catch (Exception e) {
-            logger.info("Trying to process ChangedFields on unsupported events or no ChangedFields found. Error: " + e.getMessage() + "\n");
+            logger.info("Trying to process " + bitmapFieldPascal + " on unsupported events or no " +
+                    bitmapFieldPascal + " found. Error: " + e.getMessage() + "\n");
         }
     }
 

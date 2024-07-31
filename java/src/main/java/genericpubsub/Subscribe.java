@@ -250,7 +250,9 @@ public class Subscribe extends CommonContext {
         GenericRecord record = deserialize(writerSchema, ce.getEvent().getPayload());
         logger.info("Received event with payload: " + record.toString() + " with schema name: " + writerSchema.getName());
         if (processChangedFields) {
-            processAndPrintChangedFields(writerSchema, record);
+            // This example expands the changedFields bitmap field in ChangeEventHeader.
+            // To expand the other bitmap fields, i.e., diffFields and nulledFields, replicate or modify this code.
+            processAndPrintChangedFields(writerSchema, record, "changedFields");
         }
     }
 

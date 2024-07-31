@@ -101,7 +101,9 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
                 GenericRecord record = deserialize(writerSchema, event.getEvent().getPayload());
                 logger.info("Received event: {}", record.toString());
                 if (processChangedFields) {
-                    processAndPrintChangedFields(writerSchema, record);
+                    // This example expands the changedFields bitmap field in ChangeEventHeader.
+                    // To expand the other bitmap fields, i.e., diffFields and nulledFields, replicate or modify this code.
+                    processAndPrintChangedFields(writerSchema, record, "changedFields");
                 }
             }
             logger.info("Processed batch of {} event(s)", response.getEventsList().size());
