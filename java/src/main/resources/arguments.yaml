@@ -43,7 +43,8 @@ NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 REPLAY_PRESET: null
 # Replay ID in ByteString
 REPLAY_ID: null
-# Flag to enable/disable bitmap field processing in Subscribe and ManagedSubscribe examples for CDC events (default: false)
+# Flag to enable/disable processing of bitmap fields in ChangeEventHeader in Subscribe and
+# ManagedSubscribe examples for change data capture events (default: false)
 PROCESS_CHANGE_EVENT_HEADER_FIELDS: null
 
 # ManagedSubscribe RPC parameters
