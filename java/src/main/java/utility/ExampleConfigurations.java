@@ -27,6 +27,7 @@ public class ExampleConfigurations {
     private Integer numberOfEventsToPublish;
     private Boolean singlePublishRequest;
     private Integer numberOfEventsToSubscribeInEachFetchRequest;
+    private Boolean processChangedFields;
     private Boolean plaintextChannel;
     private Boolean providedLoginUrl;
     private ReplayPreset replayPreset;
@@ -36,7 +37,7 @@ public class ExampleConfigurations {
 
     public ExampleConfigurations() {
         this(null, null, null, null, null,
-                null, null, null, 5, false, 5,
+                null, null, null, 5, false, 5, false,
                 false, false, ReplayPreset.LATEST, null, null, null);
     }
     public ExampleConfigurations(String filename) throws IOException {
@@ -62,6 +63,8 @@ public class ExampleConfigurations {
                 false : Boolean.parseBoolean(obj.get("SINGLE_PUBLISH_REQUEST").toString());
         this.numberOfEventsToSubscribeInEachFetchRequest = obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_IN_FETCHREQUEST").toString());
+        this.processChangedFields = obj.get("PROCESS_CHANGE_EVENT_HEADER_FIELDS") == null ?
+                false : Boolean.parseBoolean(obj.get("PROCESS_CHANGE_EVENT_HEADER_FIELDS").toString());
         this.plaintextChannel = obj.get("USE_PLAINTEXT_CHANNEL") != null && Boolean.parseBoolean(obj.get("USE_PLAINTEXT_CHANNEL").toString());
         this.providedLoginUrl = obj.get("USE_PROVIDED_LOGIN_URL") != null && Boolean.parseBoolean(obj.get("USE_PROVIDED_LOGIN_URL").toString());
 
@@ -85,12 +88,13 @@ public class ExampleConfigurations {
     public ExampleConfigurations(String username, String password, String loginUrl,
                                  String pubsubHost, int pubsubPort, String topic) {
         this(username, password, loginUrl, null, null, pubsubHost, pubsubPort, topic,
-                5, false, Integer.MAX_VALUE, false, false, ReplayPreset.LATEST, null, null, null);
+                5, false, Integer.MAX_VALUE, false, false, false, ReplayPreset.LATEST, null, null, null);
     }
 
     public ExampleConfigurations(String username, String password, String loginUrl, String tenantId, String accessToken,
-                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,Boolean singlePublishRequest,
-                                 Integer numberOfEventsToSubscribeInEachFetchRequest, Boolean plaintextChannel, Boolean providedLoginUrl,
+                                 String pubsubHost, Integer pubsubPort, String topic, Integer numberOfEventsToPublish,
+                                 Boolean singlePublishRequest, Integer numberOfEventsToSubscribeInEachFetchRequest,
+                                 Boolean processChangedFields, Boolean plaintextChannel, Boolean providedLoginUrl,
                                  ReplayPreset replayPreset, ByteString replayId, String devName, String managedSubId) {
         this.username = username;
         this.password = password;
@@ -100,8 +104,10 @@ public class ExampleConfigurations {
         this.pubsubHost = pubsubHost;
         this.pubsubPort = pubsubPort;
         this.topic = topic;
+        this.singlePublishRequest = singlePublishRequest;
         this.numberOfEventsToPublish = numberOfEventsToPublish;
         this.numberOfEventsToSubscribeInEachFetchRequest = numberOfEventsToSubscribeInEachFetchRequest;
+        this.processChangedFields = processChangedFields;
         this.plaintextChannel = plaintextChannel;
         this.providedLoginUrl = providedLoginUrl;
         this.replayPreset = replayPreset;
@@ -188,6 +194,14 @@ public class ExampleConfigurations {
 
     public void setNumberOfEventsToSubscribeInEachFetchRequest(int numberOfEventsToSubscribeInEachFetchRequest) {
         this.numberOfEventsToSubscribeInEachFetchRequest = numberOfEventsToSubscribeInEachFetchRequest;
+    }
+
+    public Boolean getProcessChangedFields() {
+        return processChangedFields;
+    }
+
+    public void setProcessChangedFields(Boolean processChangedFields) {
+        this.processChangedFields = processChangedFields;
     }
 
     public boolean usePlaintextChannel() {

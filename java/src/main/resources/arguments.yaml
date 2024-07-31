@@ -26,7 +26,7 @@ TENANT_ID: null
 ACCESS_TOKEN: null
 
 # =========================
-# Optional configurations:
+# Optional Configurations:
 # =========================
 # Topic to publish/subscribe to (default: /event/Order_Event__e)
 TOPIC: null
@@ -43,6 +43,9 @@ NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 REPLAY_PRESET: null
 # Replay ID in ByteString
 REPLAY_ID: null
+# Flag to enable/disable processing of bitmap fields in ChangeEventHeader in Subscribe and
+# ManagedSubscribe examples for change data capture events (default: false)
+PROCESS_CHANGE_EVENT_HEADER_FIELDS: null
 
 # ManagedSubscribe RPC parameters
 # For ManagedSubscribe.java, either supply the developer name or the ID of ManagedEventSubscription

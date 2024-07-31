@@ -3,12 +3,12 @@ package utility;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
@@ -20,10 +20,13 @@ import org.eclipse.jetty.client.HttpProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.CaseFormat;
 import com.google.protobuf.ByteString;
 import com.salesforce.eventbus.protobuf.*;
 
 import io.grpc.*;
+
+import static utility.EventParser.getFieldListFromBitmap;
 
 /**
  * The CommonContext class provides a list of member variables and functions that is used across
@@ -263,6 +266,36 @@ public class CommonContext implements AutoCloseable {
         ByteArrayInputStream in = new ByteArrayInputStream(payload.toByteArray());
         BinaryDecoder decoder = DecoderFactory.get().directBinaryDecoder(in, null);
         return reader.read(null, decoder);
+    }
+
+    /**
+     * Helper function to process and print bitmap fields
+     *
+     * @param schema
+     * @param record
+     * @param bitmapField
+     * @return
+     */
+    public static void processAndPrintBitmapFields(Schema schema, GenericRecord record, String bitmapField) {
+        String bitmapFieldPascal = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, bitmapField);
+        try {
+            List<String> changedFields = getFieldListFromBitmap(schema,
+                    (GenericData.Record) record.get("ChangeEventHeader"), bitmapField);
+            if (!changedFields.isEmpty()) {
+                logger.info("============================");
+                logger.info("       " + bitmapFieldPascal + "       ");
+                logger.info("============================");
+                for (String field : changedFields) {
+                    logger.info(field);
+                }
+                logger.info("============================\n");
+            } else {
+                logger.info("No " + bitmapFieldPascal + " found\n");
+            }
+        } catch (Exception e) {
+            logger.info("Trying to process " + bitmapFieldPascal + " on unsupported events or no " +
+                    bitmapFieldPascal + " found. Error: " + e.getMessage() + "\n");
+        }
     }
 
     /**
