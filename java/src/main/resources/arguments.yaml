@@ -37,7 +37,7 @@ NUMBER_OF_EVENTS_TO_PUBLISH: null
 # in different PublishRequests (default: false)
 # Used only by PublishStream.java
 SINGLE_PUBLISH_REQUEST: null
-# Number of Events to subscribe (default: 5)
+# Number of events to subscribe to in each FetchRequest/ManagedFetchRequest (default: 5)
 NUMBER_OF_EVENTS_IN_FETCHREQUEST: null
 # ReplayPreset (Accepted Values: {EARLIEST, LATEST (default), CUSTOM})
 REPLAY_PRESET: null

@@ -30,7 +30,7 @@ import utility.ExampleConfigurations;
  * @author jalaya
  */
 public class ManagedSubscribe extends CommonContext implements StreamObserver<ManagedFetchResponse> {
-    private static int BATCH_SIZE = 5;
+    private static int BATCH_SIZE;
     private StreamObserver<ManagedFetchRequest> serverStream;
     private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private final CountDownLatch serverOnCompletedLatch = new CountDownLatch(1);
@@ -45,7 +45,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         isActive.set(true);
         this.managedSubscriptionId = exampleConfigurations.getManagedSubscriptionId();
         this.developerName = exampleConfigurations.getDeveloperName();
-        BATCH_SIZE = Math.min(5, exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest());
+        this.BATCH_SIZE = exampleConfigurations.getNumberOfEventsToSubscribeInEachFetchRequest();
         this.processChangedFields = exampleConfigurations.getProcessChangedFields();
     }
 
