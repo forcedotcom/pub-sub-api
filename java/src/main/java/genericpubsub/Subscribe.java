@@ -187,28 +187,30 @@ public class Subscribe extends CommonContext {
 
                     ReplayPreset retryReplayPreset = ReplayPreset.LATEST;
                     ByteString retryReplayId = null;
-                    long retryDelay = 0;
+                    long retryDelay = getBackoffWaitTime();
 
                     // Retry strategies that can be implemented based on the error type.
-                    if (errorCode.contains(ERROR_REPLAY_ID_VALIDATION_FAILED) || errorCode.contains(ERROR_REPLAY_ID_INVALID)) {
-                        logger.info("Invalid or no replayId provided in FetchRequest for CUSTOM Replay. Trying again with EARLIEST Replay.");
-                        retryDelay = getBackoffWaitTime();
-                        retryReplayPreset = ReplayPreset.EARLIEST;
-                    } else if (errorCode.contains(ERROR_SERVICE_UNAVAILABLE)) {
-                        logger.info("Service currently unavailable. Trying again with LATEST Replay.");
-                        retryDelay = SERVICE_UNAVAILABLE_WAIT_BEFORE_RETRY_SECONDS * 1000;
-                    } else {
-                        retryDelay = getBackoffWaitTime();
-                        if (storedReplay != null) {
-                            logger.info("Retrying with Stored Replay.");
-                            retryReplayPreset = ReplayPreset.CUSTOM;
-                            retryReplayId = getStoredReplay();
+                    if(errorCode != null && !errorCode.isEmpty()) {
+                        if (errorCode.contains(ERROR_REPLAY_ID_VALIDATION_FAILED) || errorCode.contains(ERROR_REPLAY_ID_INVALID)) {
+                            logger.info("Invalid or no replayId provided in FetchRequest for CUSTOM Replay. Trying again with EARLIEST Replay.");
+                            retryReplayPreset = ReplayPreset.EARLIEST;
+                        } else if (errorCode.contains(ERROR_SERVICE_UNAVAILABLE)) {
+                            logger.info("Service currently unavailable. Trying again with LATEST Replay.");
+                            retryDelay = SERVICE_UNAVAILABLE_WAIT_BEFORE_RETRY_SECONDS * 1000;
                         } else {
-                            logger.info("Retrying with LATEST Replay.");;
-                        }
+                            if (storedReplay != null) {
+                                logger.info("Retrying with Stored Replay.");
+                                retryReplayPreset = ReplayPreset.CUSTOM;
+                                retryReplayId = getStoredReplay();
+                            } else {
+                                logger.info("Retrying with LATEST Replay.");
+                            }
 
+                        }
+                    } else {
+                        logger.info("Unknown error. Retrying with LATEST Replay.");
                     }
-                    logger.info("Retrying in " + retryDelay + "ms.");
+                    logger.info(String.format("Retrying in %s ms.", retryDelay));
                     retryScheduler.schedule(new RetryRequestSender(retryReplayPreset, retryReplayId), retryDelay, TimeUnit.MILLISECONDS);
                 }
             }
