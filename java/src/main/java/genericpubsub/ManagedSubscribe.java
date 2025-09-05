@@ -1,6 +1,7 @@
 package genericpubsub;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -11,6 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.ByteString;
 import com.salesforce.eventbus.protobuf.*;
 
@@ -39,6 +43,7 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
     private String developerName;
     private String managedSubscriptionId;
     private final boolean processChangedFields;
+    
 
     public ManagedSubscribe(ExampleConfigurations exampleConfigurations) {
         super(exampleConfigurations);
@@ -99,7 +104,24 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
                 logger.info("processEvent - EventID: {} SchemaId: {}", event.getEvent().getId(), schemaId);
                 Schema writerSchema = getSchema(schemaId);
                 GenericRecord record = deserialize(writerSchema, event.getEvent().getPayload());
-                logger.info("Received event: {}", record.toString());
+
+                // Convert GenericRecord to a Map
+                Map<String, Object> recordMap = new HashMap<>();
+                for (Schema.Field field : writerSchema.getFields()) {
+                    String fieldName = field.name();
+                    Object value = record.get(fieldName);
+                    recordMap.put(fieldName, value);
+                }
+
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                String jsonString = mapper.writeValueAsString(recordMap);
+                
+                logger.info("Received event with payload:\n" + jsonString);
+                logger.info("Schema name: " + writerSchema.getName());
+                
+                //logger.info("Received event: {}", record.toString());
+
                 if (processChangedFields) {
                     // This example expands the changedFields bitmap field in ChangeEventHeader.
                     // To expand the other bitmap fields, i.e., diffFields and nulledFields, replicate or modify this code.
@@ -225,11 +247,14 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
                 }
                 serverOnCompletedLatch.await(6, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                logger.warn("interrupted while waiting to close ", e);
+                logger.warn("Interrupted while waiting to close", e);
+            } catch (Exception e) {
+                logger.error("Error during shutdown", e);
             }
         }
         super.close();
     }
+
 
     /**
      * Helper function to terminate the client on errors.
@@ -253,15 +278,25 @@ public class ManagedSubscribe extends CommonContext implements StreamObserver<Ma
         }
     }
 
-    public static void main(String args[]) throws IOException  {
+    public static void main(String args[]) throws IOException {
         ExampleConfigurations exampleConfigurations = new ExampleConfigurations("arguments.yaml");
-
-        // Using the try-with-resource statement. The CommonContext class implements AutoCloseable in
-        // order to close the resources used.
-        try (ManagedSubscribe subscribe = new ManagedSubscribe(exampleConfigurations)) {
+    
+        // Create an instance of ManagedSubscribe
+        ManagedSubscribe subscribe = new ManagedSubscribe(exampleConfigurations);
+    
+        // Add a shutdown hook to close the connection when Ctrl+C is pressed
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (ManagedSubscribe.isActive.get()) {
+                System.out.println("Shutdown hook triggered, closing connection...");
+                subscribe.close();
+            }
+        }));
+    
+        try {
             subscribe.startManagedSubscription();
         } catch (Exception e) {
             printStatusRuntimeException("Error during ManagedSubscribe", e);
         }
     }
+    
 }
