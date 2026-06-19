@@ -5,6 +5,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.avro.Schema;
@@ -44,6 +47,18 @@ public class CommonContext implements AutoCloseable {
     protected final HttpClient httpClient;
     protected final SessionTokenService sessionTokenService;
     protected final CallCredentials callCredentials;
+
+    // Set only when authenticating via the OAuth2 client credentials flow. Used to mint fresh
+    // access tokens (which may be short-lived orgJWTs) for periodic auth refresh on long-lived streams.
+    protected OAuthClientCredSessionFlow oAuthClientCredSessionFlow;
+
+    private final ThreadFactory authRefreshThreadFactory = runnable -> {
+        Thread thread = new Thread(runnable, "auth-refresh-thread");
+        thread.setDaemon(true);
+        return thread;
+    };
+    private final ScheduledExecutorService authRefreshScheduler =
+            Executors.newScheduledThreadPool(1, authRefreshThreadFactory);
 
     protected String tenantGuid;
     protected String busTopicName;
@@ -119,8 +134,24 @@ public class CommonContext implements AutoCloseable {
                 close();
                 throw new IllegalArgumentException("cannot log in with username/password", e);
             }
+        } else if (options.getConsumerKey() != null && options.getConsumerSecret() != null) {
+            if (options.getTenantId() == null || options.getTenantId().isEmpty()) {
+                close();
+                throw new IllegalArgumentException("Please provide a Tenant ID for the OAuth2 client credentials flow");
+            }
+            try {
+                oAuthClientCredSessionFlow = new OAuthClientCredSessionFlow(httpClient,
+                        options.getLoginUrl(),
+                        options.getTenantId(),
+                        options.getConsumerKey(),
+                        options.getConsumerSecret());
+                return oAuthClientCredSessionFlow.loginWithAccessToken();
+            } catch (Exception e) {
+                close();
+                throw new IllegalArgumentException("Unable to obtain OAuth2 token", e);
+            }
         } else {
-            logger.warn("Please use either username/password or session token for authentication");
+            logger.warn("Please use username/password, session token, or OAuth2 client credentials for authentication");
             close();
             return null;
         }
@@ -163,6 +194,60 @@ public class CommonContext implements AutoCloseable {
                 throw ex;
             }
         }
+    }
+
+    /**
+     * Schedules a periodic auth refresh to keep a long-lived bidirectional stream alive.
+     *
+     * This is necessary when authenticating via the OAuth2 client credentials flow, since the
+     * External Client App may issue short-lived orgJWT access tokens that expire while the stream
+     * is open. Subscribers that maintain a stream (e.g. Subscribe) should call this after starting
+     * the subscription, and override {@link #refreshAuth()} to send the refreshed token to the
+     * server over their stream. Other auth methods (username/password, session token) do not need
+     * to refresh, so this is a no-op for them.
+     */
+    protected void scheduleAuthRefresh() {
+        if (oAuthClientCredSessionFlow != null) {
+            authRefreshScheduler.scheduleAtFixedRate(this::refreshAuth, 10, 60, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * Stops the periodic auth refresh and waits for any in-flight refreshAuth() to finish. This is
+     * idempotent. Streaming examples that close their own stream should call this BEFORE completing the
+     * stream, so a scheduled refreshAuth() cannot call onNext() on an already-completed stream. It is
+     * also called from {@link #close()} as a safety net.
+     */
+    protected void stopAuthRefresh() {
+        authRefreshScheduler.shutdownNow();
+        try {
+            authRefreshScheduler.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted while waiting to stop auth refresh scheduler", e);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * Mints a fresh auth token for use in {@code auth_refresh} requests on bidirectional streams.
+     *
+     * @return a fresh token string, or null if auth refresh is not applicable for the current auth method
+     */
+    protected String getFreshAuthToken() {
+        if (oAuthClientCredSessionFlow != null) {
+            APISessionCredentials freshCreds = oAuthClientCredSessionFlow.loginWithAccessToken();
+            return freshCreds.getToken();
+        }
+        return null;
+    }
+
+    /**
+     * Sends a refreshed auth token to the server over the example's stream. The base implementation
+     * is a no-op; streaming examples that support auth refresh (e.g. Subscribe) override this to put
+     * the fresh token on their request stream via {@code FetchRequest.setAuthRefresh}.
+     */
+    protected void refreshAuth() {
+        // No-op by default. See Subscribe#refreshAuth for an example implementation.
     }
 
     /**
@@ -362,6 +447,11 @@ public class CommonContext implements AutoCloseable {
      */
     @Override
     public void close() {
+        // Stop the auth refresh scheduler first so a scheduled refreshAuth() cannot fire against an
+        // already-stopped HTTP client or a shutting-down gRPC channel. Idempotent: subclasses that manage
+        // their own stream (e.g. Subscribe) may have already called stopAuthRefresh() before this.
+        stopAuthRefresh();
+
         if (httpClient != null) {
             try {
                 httpClient.stop();

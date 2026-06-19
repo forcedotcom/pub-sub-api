@@ -14,16 +14,22 @@ PUBSUB_PORT: 7443
 # Your Salesforce Login URL
 LOGIN_URL: null
 
-# For authentication, you can use either username/password or accessToken/tenantId types.
-# Either one of the combinations is required. Please specify `null` values to the unused type.
+# For authentication, you can use username/password, accessToken/tenantId, or the OAuth2 client
+# credentials flow (consumerKey/consumerSecret/tenantId). Exactly one of the combinations is
+# required. Please specify `null` values to the unused types.
 # Your Salesforce Username
 USERNAME: null
 # Your Salesforce Password
 PASSWORD: null
-# Your Salesforce org Tenant ID
+# Your Salesforce org Tenant ID. Required for both the session token and OAuth2 client credentials flows.
 TENANT_ID: null
 # Your Salesforce Session Token
 ACCESS_TOKEN: null
+# OAuth2 client credentials flow (used together with TENANT_ID). The consumer key and secret of the
+# org's External Client App / Connected App. When the app is configured to issue JWT-based (orgJWT)
+# access tokens, the Subscribe example refreshes the token periodically to keep a long-lived stream alive.
+CONSUMER_KEY: null
+CONSUMER_SECRET: null
 
 # =========================
 # Optional Configurations:

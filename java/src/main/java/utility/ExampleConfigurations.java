@@ -21,6 +21,8 @@ public class ExampleConfigurations {
     private String loginUrl;
     private String tenantId;
     private String accessToken;
+    private String consumerKey;
+    private String consumerSecret;
     private String pubsubHost;
     private Integer pubsubPort;
     private String topic;
@@ -57,6 +59,8 @@ public class ExampleConfigurations {
         this.topic = obj.get("TOPIC") == null ? "/event/Order_Event__e" : obj.get("TOPIC").toString();
         this.tenantId = obj.get("TENANT_ID") == null ? null : obj.get("TENANT_ID").toString();
         this.accessToken = obj.get("ACCESS_TOKEN") == null ? null : obj.get("ACCESS_TOKEN").toString();
+        this.consumerKey = obj.get("CONSUMER_KEY") == null ? null : obj.get("CONSUMER_KEY").toString();
+        this.consumerSecret = obj.get("CONSUMER_SECRET") == null ? null : obj.get("CONSUMER_SECRET").toString();
         this.numberOfEventsToPublish = obj.get("NUMBER_OF_EVENTS_TO_PUBLISH") == null ?
                 5 : Integer.parseInt(obj.get("NUMBER_OF_EVENTS_TO_PUBLISH").toString());
         this.singlePublishRequest = obj.get("SINGLE_PUBLISH_REQUEST") == null ?
@@ -154,6 +158,22 @@ public class ExampleConfigurations {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getConsumerKey() {
+        return consumerKey;
+    }
+
+    public void setConsumerKey(String consumerKey) {
+        this.consumerKey = consumerKey;
+    }
+
+    public String getConsumerSecret() {
+        return consumerSecret;
+    }
+
+    public void setConsumerSecret(String consumerSecret) {
+        this.consumerSecret = consumerSecret;
     }
 
     public String getPubsubHost() {

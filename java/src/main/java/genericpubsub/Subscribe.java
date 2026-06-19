@@ -22,7 +22,9 @@ import utility.ExampleConfigurations;
  * A single-topic subscriber that consumes events using Event Bus API Subscribe RPC. The example demonstrates how to:
  * - implement a long-lived subscription to a single topic
  * - a basic flow control strategy
- * - a basic retry strategy.
+ * - a basic retry strategy
+ * - a periodic auth refresh strategy to keep the stream alive when authenticating via the OAuth2
+ *   client credentials flow (which may issue short-lived orgJWT access tokens). See {@link #refreshAuth()}.
  *
  * Example:
  * ./run.sh genericpubsub.Subscribe
@@ -40,6 +42,13 @@ public class Subscribe extends CommonContext {
     public static ExampleConfigurations exampleConfigurations;
     public static AtomicBoolean isActive = new AtomicBoolean(false);
     public static AtomicInteger retriesLeft = new AtomicInteger(MAX_RETRIES);
+    // serverStream is written/read from multiple threads: the main thread and retry scheduler thread
+    // (fetch()), the gRPC response-callback thread (fetchMore()), and the auth-refresh scheduler thread
+    // (refreshAuth()). gRPC forbids concurrent onNext()/onCompleted() on the same call, so ALL access is
+    // serialized on streamLock. streamActive (guarded by streamLock) tracks whether the current stream is
+    // open, so we never call onNext() after onCompleted().
+    private final Object streamLock = new Object();
+    private boolean streamActive = false;
     private StreamObserver<FetchRequest> serverStream;
     private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private AtomicInteger receivedEvents = new AtomicInteger(0);
@@ -83,6 +92,10 @@ public class Subscribe extends CommonContext {
     public void startSubscription() {
         logger.info("Subscription started for topic: " + busTopicName + ".");
         fetch(BATCH_SIZE, busTopicName, replayPreset, customReplayId);
+        // Schedule periodic auth refresh to keep the stream alive when using the OAuth2 client
+        // credentials flow, which may issue short-lived orgJWT access tokens. This is a no-op for
+        // username/password or session token auth. Must be called after fetch() sets up serverStream.
+        scheduleAuthRefresh();
         // Thread being blocked here for demonstration of this specific example. Blocking the thread in production is not recommended.
         while(isActive.get()) {
             waitInMillis(5_000);
@@ -97,7 +110,6 @@ public class Subscribe extends CommonContext {
      * @param providedReplayId
      */
     public void fetch(int providedBatchSize, String providedTopicName, ReplayPreset providedReplayPreset, ByteString providedReplayId) {
-        serverStream = asyncStub.subscribe(this.responseStreamObserver);
         FetchRequest.Builder fetchRequestBuilder = FetchRequest.newBuilder()
                 .setNumRequested(providedBatchSize)
                 .setTopicName(providedTopicName)
@@ -106,7 +118,13 @@ public class Subscribe extends CommonContext {
             logger.info("Subscription has Replay Preset set to CUSTOM. In this case, the events will be delivered from provided ReplayId.");
             fetchRequestBuilder.setReplayId(providedReplayId);
         }
-        serverStream.onNext(fetchRequestBuilder.build());
+        // Establish the new stream and send the first request under streamLock so concurrent senders
+        // (fetchMore on the gRPC thread, refreshAuth on the auth-refresh thread) never race the swap.
+        synchronized (streamLock) {
+            serverStream = asyncStub.subscribe(this.responseStreamObserver);
+            streamActive = true;
+            serverStream.onNext(fetchRequestBuilder.build());
+        }
     }
 
     /**
@@ -182,8 +200,12 @@ public class Subscribe extends CommonContext {
                     String errorCode = (trailers != null && trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) != null) ?
                             trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) : null;
 
-                    // Closing the old stream for sanity
-                    serverStream.onCompleted();
+                    // Closing the old stream for sanity. Mark inactive under streamLock so a concurrent
+                    // refreshAuth()/fetchMore() does not call onNext() on the completed stream.
+                    synchronized (streamLock) {
+                        streamActive = false;
+                        serverStream.onCompleted();
+                    }
 
                     ReplayPreset retryReplayPreset = ReplayPreset.LATEST;
                     ByteString retryReplayId = null;
@@ -277,7 +299,41 @@ public class Subscribe extends CommonContext {
     public void fetchMore(int numEvents) {
         FetchRequest fetchRequest = FetchRequest.newBuilder().setTopicName(this.busTopicName)
                 .setNumRequested(numEvents).build();
-        serverStream.onNext(fetchRequest);
+        synchronized (streamLock) {
+            if (streamActive && serverStream != null) {
+                serverStream.onNext(fetchRequest);
+            }
+        }
+    }
+
+    /**
+     * Mints a fresh auth token and sends it to the server over the subscribe stream as an
+     * {@code auth_refresh}. This keeps a long-lived subscription alive when using the OAuth2 client
+     * credentials flow with short-lived (orgJWT) access tokens. Scheduled by {@link #startSubscription()}
+     * via {@link utility.CommonContext#scheduleAuthRefresh()} and only active for OAuth2 auth.
+     */
+    @Override
+    protected void refreshAuth() {
+        // Runs on the auth-refresh scheduler thread. Any uncaught exception here would cancel all future
+        // scheduled refreshes (scheduleAtFixedRate semantics) and let the orgJWT expire, silently dropping
+        // the subscription. So we catch everything and simply retry on the next tick.
+        try {
+            logger.info("Refreshing auth");
+            String freshToken = getFreshAuthToken();
+            if (freshToken == null) {
+                return;
+            }
+            FetchRequest fetchRequest = FetchRequest.newBuilder().setAuthRefresh(freshToken).build();
+            // Send under streamLock and only while the stream is open, so we never call onNext()
+            // concurrently with fetchMore()/fetch() or after onCompleted().
+            synchronized (streamLock) {
+                if (streamActive && serverStream != null) {
+                    serverStream.onNext(fetchRequest);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to refresh auth; will retry on next scheduled interval.", e);
+        }
     }
 
     /**
@@ -307,9 +363,15 @@ public class Subscribe extends CommonContext {
      */
     @Override
     public synchronized void close() {
+        // Stop auth refresh before completing the stream so a scheduled refreshAuth() cannot call
+        // onNext() on the stream we are about to (or have just) completed.
+        stopAuthRefresh();
         try {
-            if (serverStream != null) {
-                serverStream.onCompleted();
+            synchronized (streamLock) {
+                if (serverStream != null && streamActive) {
+                    streamActive = false;
+                    serverStream.onCompleted();
+                }
             }
             if (retryScheduler != null) {
                 retryScheduler.shutdown();
