@@ -42,13 +42,6 @@ public class Subscribe extends CommonContext {
     public static ExampleConfigurations exampleConfigurations;
     public static AtomicBoolean isActive = new AtomicBoolean(false);
     public static AtomicInteger retriesLeft = new AtomicInteger(MAX_RETRIES);
-    // serverStream is written/read from multiple threads: the main thread and retry scheduler thread
-    // (fetch()), the gRPC response-callback thread (fetchMore()), and the auth-refresh scheduler thread
-    // (refreshAuth()). gRPC forbids concurrent onNext()/onCompleted() on the same call, so ALL access is
-    // serialized on streamLock. streamActive (guarded by streamLock) tracks whether the current stream is
-    // open, so we never call onNext() after onCompleted().
-    private final Object streamLock = new Object();
-    private boolean streamActive = false;
     private StreamObserver<FetchRequest> serverStream;
     private Map<String, Schema> schemaCache = new ConcurrentHashMap<>();
     private AtomicInteger receivedEvents = new AtomicInteger(0);
@@ -110,6 +103,7 @@ public class Subscribe extends CommonContext {
      * @param providedReplayId
      */
     public void fetch(int providedBatchSize, String providedTopicName, ReplayPreset providedReplayPreset, ByteString providedReplayId) {
+        serverStream = asyncStub.subscribe(this.responseStreamObserver);
         FetchRequest.Builder fetchRequestBuilder = FetchRequest.newBuilder()
                 .setNumRequested(providedBatchSize)
                 .setTopicName(providedTopicName)
@@ -118,13 +112,7 @@ public class Subscribe extends CommonContext {
             logger.info("Subscription has Replay Preset set to CUSTOM. In this case, the events will be delivered from provided ReplayId.");
             fetchRequestBuilder.setReplayId(providedReplayId);
         }
-        // Establish the new stream and send the first request under streamLock so concurrent senders
-        // (fetchMore on the gRPC thread, refreshAuth on the auth-refresh thread) never race the swap.
-        synchronized (streamLock) {
-            serverStream = asyncStub.subscribe(this.responseStreamObserver);
-            streamActive = true;
-            serverStream.onNext(fetchRequestBuilder.build());
-        }
+        serverStream.onNext(fetchRequestBuilder.build());
     }
 
     /**
@@ -200,12 +188,7 @@ public class Subscribe extends CommonContext {
                     String errorCode = (trailers != null && trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) != null) ?
                             trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) : null;
 
-                    // Closing the old stream for sanity. Mark inactive under streamLock so a concurrent
-                    // refreshAuth()/fetchMore() does not call onNext() on the completed stream.
-                    synchronized (streamLock) {
-                        streamActive = false;
-                        serverStream.onCompleted();
-                    }
+                    serverStream.onCompleted();
 
                     ReplayPreset retryReplayPreset = ReplayPreset.LATEST;
                     ByteString retryReplayId = null;
@@ -299,11 +282,7 @@ public class Subscribe extends CommonContext {
     public void fetchMore(int numEvents) {
         FetchRequest fetchRequest = FetchRequest.newBuilder().setTopicName(this.busTopicName)
                 .setNumRequested(numEvents).build();
-        synchronized (streamLock) {
-            if (streamActive && serverStream != null) {
-                serverStream.onNext(fetchRequest);
-            }
-        }
+        serverStream.onNext(fetchRequest);
     }
 
     /**
@@ -324,13 +303,7 @@ public class Subscribe extends CommonContext {
                 return;
             }
             FetchRequest fetchRequest = FetchRequest.newBuilder().setAuthRefresh(freshToken).build();
-            // Send under streamLock and only while the stream is open, so we never call onNext()
-            // concurrently with fetchMore()/fetch() or after onCompleted().
-            synchronized (streamLock) {
-                if (streamActive && serverStream != null) {
-                    serverStream.onNext(fetchRequest);
-                }
-            }
+            serverStream.onNext(fetchRequest);
         } catch (Exception e) {
             logger.warn("Failed to refresh auth; will retry on next scheduled interval.", e);
         }
@@ -367,11 +340,8 @@ public class Subscribe extends CommonContext {
         // onNext() on the stream we are about to (or have just) completed.
         stopAuthRefresh();
         try {
-            synchronized (streamLock) {
-                if (serverStream != null && streamActive) {
-                    streamActive = false;
-                    serverStream.onCompleted();
-                }
+            if (serverStream != null) {
+                serverStream.onCompleted();
             }
             if (retryScheduler != null) {
                 retryScheduler.shutdown();

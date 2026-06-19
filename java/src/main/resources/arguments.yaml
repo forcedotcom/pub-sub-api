@@ -26,7 +26,7 @@ TENANT_ID: null
 # Your Salesforce Session Token
 ACCESS_TOKEN: null
 # OAuth2 client credentials flow (used together with TENANT_ID). The consumer key and secret of the
-# org's External Client App / Connected App. When the app is configured to issue JWT-based (orgJWT)
+# org's External Client App. When the app is configured to issue JWT-based (orgJWT)
 # access tokens, the Subscribe example refreshes the token periodically to keep a long-lived stream alive.
 CONSUMER_KEY: null
 CONSUMER_SECRET: null
