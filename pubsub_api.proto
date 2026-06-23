@@ -155,7 +155,6 @@
     * FetchResponses.
     */
    int32 num_requested = 4;
-   // For internal Salesforce use only.
    string auth_refresh = 5;
  }
  
@@ -203,7 +202,6 @@
    string topic_name = 1;
    // Batch of ProducerEvent(s) to send
    repeated ProducerEvent events = 2;
-   // For internal Salesforce use only.
    string auth_refresh = 3;
  }
  
@@ -251,7 +249,6 @@
     * FetchResponses.
     */
    int32 num_requested = 3;
-   // For internal Salesforce use only.
    string auth_refresh = 4;
    CommitReplayRequest commit_replay_id_request = 5;
    

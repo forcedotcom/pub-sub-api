@@ -22,7 +22,9 @@ import utility.ExampleConfigurations;
  * A single-topic subscriber that consumes events using Event Bus API Subscribe RPC. The example demonstrates how to:
  * - implement a long-lived subscription to a single topic
  * - a basic flow control strategy
- * - a basic retry strategy.
+ * - a basic retry strategy
+ * - a periodic auth refresh strategy to keep the stream alive when authenticating via the OAuth2
+ *   client credentials flow (which may issue short-lived orgJWT access tokens). See {@link #refreshAuth()}.
  *
  * Example:
  * ./run.sh genericpubsub.Subscribe
@@ -83,6 +85,10 @@ public class Subscribe extends CommonContext {
     public void startSubscription() {
         logger.info("Subscription started for topic: " + busTopicName + ".");
         fetch(BATCH_SIZE, busTopicName, replayPreset, customReplayId);
+        // Schedule periodic auth refresh to keep the stream alive when using the OAuth2 client
+        // credentials flow, which may issue short-lived orgJWT access tokens. This is a no-op for
+        // username/password or session token auth. Must be called after fetch() sets up serverStream.
+        scheduleAuthRefresh();
         // Thread being blocked here for demonstration of this specific example. Blocking the thread in production is not recommended.
         while(isActive.get()) {
             waitInMillis(5_000);
@@ -182,7 +188,6 @@ public class Subscribe extends CommonContext {
                     String errorCode = (trailers != null && trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) != null) ?
                             trailers.get(Metadata.Key.of("error-code", Metadata.ASCII_STRING_MARSHALLER)) : null;
 
-                    // Closing the old stream for sanity
                     serverStream.onCompleted();
 
                     ReplayPreset retryReplayPreset = ReplayPreset.LATEST;
@@ -281,6 +286,30 @@ public class Subscribe extends CommonContext {
     }
 
     /**
+     * Mints a fresh auth token and sends it to the server over the subscribe stream as an
+     * {@code auth_refresh}. This keeps a long-lived subscription alive when using the OAuth2 client
+     * credentials flow with short-lived (orgJWT) access tokens. Scheduled by {@link #startSubscription()}
+     * via {@link utility.CommonContext#scheduleAuthRefresh()} and only active for OAuth2 auth.
+     */
+    @Override
+    protected void refreshAuth() {
+        // Runs on the auth-refresh scheduler thread. Any uncaught exception here would cancel all future
+        // scheduled refreshes (scheduleAtFixedRate semantics) and let the orgJWT expire, silently dropping
+        // the subscription. So we catch everything and simply retry on the next tick.
+        try {
+            logger.info("Refreshing auth");
+            String freshToken = getFreshAuthToken();
+            if (freshToken == null) {
+                return;
+            }
+            FetchRequest fetchRequest = FetchRequest.newBuilder().setAuthRefresh(freshToken).build();
+            serverStream.onNext(fetchRequest);
+        } catch (Exception e) {
+            logger.warn("Failed to refresh auth; will retry on next scheduled interval.", e);
+        }
+    }
+
+    /**
      * General getters and setters.
      */
     public AtomicInteger getReceivedEvents() {
@@ -307,6 +336,9 @@ public class Subscribe extends CommonContext {
      */
     @Override
     public synchronized void close() {
+        // Stop auth refresh before completing the stream so a scheduled refreshAuth() cannot call
+        // onNext() on the stream we are about to (or have just) completed.
+        stopAuthRefresh();
         try {
             if (serverStream != null) {
                 serverStream.onCompleted();
